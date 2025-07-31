@@ -1,0 +1,9 @@
+.stack-work/
+dist-newstyle/
+*.cabal
+*.log
+.curname
+core
+*.hi
+*.o
+*~

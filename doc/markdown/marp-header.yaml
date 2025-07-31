@@ -1,0 +1,25 @@
+---
+marp: true
+style: |
+  section {
+    font-family: 'Migu 1C';
+  }
+  p br {
+    display: none;
+  }
+  code, pre {
+    font-family: 'HackGen Console NF';
+  }
+  li {
+    font-size: 90%;
+  }
+  table {
+    font-size: 15px;
+  }
+  div.mermaid {
+    all: unset;
+  }
+theme: default
+paginate: true
+math: katex
+---

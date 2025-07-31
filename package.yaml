@@ -1,0 +1,125 @@
+name:                icfpc2025
+version:             0.0.0
+github:              TeamSampou/icfpc2025
+license:             BSD3
+author:              Team Sampou
+maintainer:          nobsun@sampou.org
+copyright:           © 2025, Team Sampou
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Experiment
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/nobsun/icfpc2025#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- unicode-show
+- bytestring
+- utf8-string
+- time
+- hspec
+- main-tester
+- doctest
+- aeson
+- array
+- constraints
+- extra
+- fgl
+- fgl-visualize
+- free
+- gloss
+- hmatrix
+- mtl
+- recursion-schemes
+- split
+- text
+- vector
+- directory
+- exceptions
+- filepath
+- process
+- stm
+
+language: GHC2021
+
+default-extensions:
+- ImplicitParams
+- ImportQualifiedPost
+- LambdaCase
+- LexicalNegation
+- MultiWayIf
+- NPlusKPatterns
+- OverloadedStrings
+- DataKinds
+- PolyKinds
+- NoStarIsType
+- TypeFamilyDependencies
+- UndecidableInstances
+- CPP
+
+ghc-options:
+- -Wall
+- -Wno-unticked-promoted-constructors
+- -Wno-unused-imports
+- -Wno-unused-top-binds
+- -Wno-orphans
+
+library:
+  source-dirs: src
+
+executables:
+  hoge:
+    main:               Main.hs
+    source-dirs:        app/hoge
+    ghc-options:
+    - -rtsopts
+    dependencies:
+    - icfpc2025
+
+  hoge:
+    main:               Main.hs
+    source-dirs:        app/hoge
+    ghc-options:
+    - -rtsopts
+    dependencies:
+    - icfpc2025
+
+  icfpc2025:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -rtsopts
+    dependencies:
+    - icfpc2025
+
+  add-entry:
+    main:                 Main.hs
+    source-dirs:          app/zzz/add-entry
+    ghc-options:
+    - -rtsopts
+    dependencies:
+    - icfpc2025
+
+tests:
+  icfpc2025-test:
+    main:                spec.hs
+    source-dirs:         test
+    dependencies:
+    - icfpc2025
+    - hspec
+    - main-tester
+
+  icfpc2025-doctest:
+    main:                doctests.hs
+    source-dirs:         test
+    dependencies:
+    - icfpc2025
+    - doctest

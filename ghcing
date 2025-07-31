@@ -1,0 +1,4 @@
+#!/bin/bash
+
+source .curname
+stack exec -- ghci app/$CURRENT_STACK_EXE_ENTRY/Main.hs

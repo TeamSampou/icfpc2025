@@ -1,0 +1,4 @@
+#!/bin/bash
+
+source .curname
+stack build icfpc2025:exe:$CURRENT_STACK_EXE_ENTRY

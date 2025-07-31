@@ -1,0 +1,28 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "icfpc2025:lib"
+
+    - path: "./app/zzz/add-entry/Main.hs"
+      component: "icfpc2025:exe:add-entry"
+
+    - path: "./app/zzz/add-entry/Paths_icfpc2025.hs"
+      component: "icfpc2025:exe:add-entry"
+
+    - path: "./app/hoge/Main.hs"
+      component: "icfpc2025:exe:hoge"
+
+    - path: "./app/hoge/Paths_icfpc2025.hs"
+      component: "icfpc2025:exe:hoge"
+
+    - path: "./app/Main.hs"
+      component: "icfpc2025:exe:icfpc2025"
+
+    - path: "./app/Paths_icfpc2025.hs"
+      component: "icfpc2025:exe:icfpc2025"
+
+    - path: "./test"
+      component: "icfpc2025:test:icfpc2025-doctest"
+
+    - path: "./test"
+      component: "icfpc2025:test:icfpc2025-test"

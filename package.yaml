@@ -47,6 +47,7 @@ dependencies:
 - filepath
 - process
 - stm
+- prettyprinter
 
 language: GHC2021
 

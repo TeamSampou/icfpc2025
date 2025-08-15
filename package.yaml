@@ -77,22 +77,6 @@ library:
   source-dirs: src
 
 executables:
-  hoge:
-    main:               Main.hs
-    source-dirs:        app/hoge
-    ghc-options:
-    - -rtsopts
-    dependencies:
-    - icfpc2025
-
-  hoge:
-    main:               Main.hs
-    source-dirs:        app/hoge
-    ghc-options:
-    - -rtsopts
-    dependencies:
-    - icfpc2025
-
   icfpc2025:
     main:                Main.hs
     source-dirs:         app

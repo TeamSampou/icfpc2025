@@ -1,4 +1,4 @@
-{-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE GHC2024 #-}
 {-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE LexicalNegation #-}

@@ -4,7 +4,7 @@
 -- ## 言語拡張と`module`宣言
 -- 最低限の指定をしてある
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE GHC2024 #-}
 {-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE LexicalNegation #-}

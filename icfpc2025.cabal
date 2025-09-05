@@ -6,7 +6,7 @@ cabal-version: 1.18
 
 name:           icfpc2025
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/nobsun/icfpc2025#readme>
+description:    Please see the README on GitHub at <https://github.com/TeamSampou/icfpc2025#readme>
 homepage:       https://github.com/TeamSampou/icfpc2025#readme
 bug-reports:    https://github.com/TeamSampou/icfpc2025/issues
 author:         Team Sampou

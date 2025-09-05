@@ -4,6 +4,10 @@ module Client
   , select
   , explore
   , guess
+  , Layout
+  , RoomLabel
+  , RoomIndex
+  , Door
   ) where
 
 import qualified Configuration.Dotenv as DotEnv
@@ -43,11 +47,16 @@ explore plans = do
     Just (Success (ExploreResponse results queryCount)) -> pure (results, queryCount)
     Just (Error e) -> fail (errorError e)
 
-type Room = Int
+type Layout = ([RoomLabel], RoomIndex, [((RoomIndex, Door), (RoomIndex, Door))])
+
+-- | 2-bit room labels
+type RoomLabel = Int
+
+type RoomIndex = Int
 
 type Door = Int
 
-guess :: ([Room], Room, [((Room, Door), (Room, Door))]) -> IO Bool
+guess :: Layout -> IO Bool
 guess (rooms, startingRoom, connections) = do
   Just teamId <- lookupEnv "ID"
   initReq <- HTTP.parseRequest "POST https://31pwr5t6ij.execute-api.eu-west-2.amazonaws.com/guess"

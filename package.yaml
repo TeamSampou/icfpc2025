@@ -63,6 +63,10 @@ ghc-options:
 
 library:
   dependencies:
+  - aeson
+  - containers
+  - dotenv
+  - http-conduit
   - split
   ## - aeson
   ## - constraints

@@ -15,3 +15,11 @@ This is Team Sampou's repository for the [ICFP Programming Contest 2025](http://
 ## Languages
 
 * Haskell
+
+## Usage
+
+Prepare `.env` file
+
+```
+ID="..."
+```

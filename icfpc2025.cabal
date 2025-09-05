@@ -29,6 +29,7 @@ flag doctests
 
 library
   exposed-modules:
+      Client
       Lib
   other-modules:
       Paths_icfpc2025
@@ -42,12 +43,16 @@ library
       NPlusKPatterns
   ghc-options: -Wall -Wno-unticked-promoted-constructors -Wno-unused-imports -Wno-unused-top-binds -Wno-orphans
   build-depends:
-      array
+      aeson
+    , array
     , base >=4.7 && <5
     , bytestring
+    , containers
     , directory
+    , dotenv
     , exceptions
     , filepath
+    , http-conduit
     , mtl
     , process
     , split

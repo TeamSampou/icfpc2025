@@ -16,6 +16,8 @@ import GHC.Generics
 import qualified Network.HTTP.Simple as HTTP
 import System.Environment (lookupEnv)
 
+-- ------------------------------------------------------------------------
+
 initClient :: IO ()
 initClient = DotEnv.loadFile DotEnv.defaultConfig
 
@@ -56,6 +58,8 @@ guess (rooms, startingRoom, connections) = do
     Just (Success (GuessResponse correct)) -> pure correct
     Just (Error e) -> fail (errorError e)
 
+-- ------------------------------------------------------------------------
+
 customOptions :: String -> J.Options
 customOptions prefix =
   J.defaultOptions
@@ -68,6 +72,8 @@ customOptions prefix =
     f [] = []
     f (c:cs) = toLower c : cs
 
+-- ------------------------------------------------------------------------
+
 data SelectResponse
   = SelectResponse
   { selectResponseProblemName :: String
@@ -79,6 +85,8 @@ instance J.ToJSON SelectResponse where
 
 instance J.FromJSON SelectResponse where
   parseJSON = J.genericParseJSON (customOptions "selectResponse")
+
+-- ------------------------------------------------------------------------
 
 data ExploreRequest
   = ExploreRequest
@@ -106,6 +114,7 @@ instance J.ToJSON ExploreResponse where
 instance J.FromJSON ExploreResponse where
   parseJSON = J.genericParseJSON (customOptions "exploreResponse")
 
+-- ------------------------------------------------------------------------
 
 data GuessRequest
   = GuessRequest
@@ -172,6 +181,7 @@ instance J.ToJSON GuessResponse where
 instance J.FromJSON GuessResponse where
   parseJSON = J.genericParseJSON (customOptions "guessResponse")
 
+-- ------------------------------------------------------------------------
 
 data OrError a
   = Success a
@@ -196,3 +206,5 @@ instance J.ToJSON ErrorResponse where
 
 instance J.FromJSON ErrorResponse where
   parseJSON = J.genericParseJSON (customOptions "error")
+
+-- ------------------------------------------------------------------------

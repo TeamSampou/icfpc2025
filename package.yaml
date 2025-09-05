@@ -21,33 +21,16 @@ description:         Please see the README on GitHub at <https://github.com/nobs
 
 dependencies:
 - base >= 4.7 && < 5
-- unicode-show
 - bytestring
-- utf8-string
 - time
-- hspec
-- main-tester
-- doctest
-- aeson
 - array
-- constraints
-- extra
-- fgl
-- fgl-visualize
-- free
-- gloss
-- hmatrix
 - mtl
-- recursion-schemes
-- split
 - text
-- vector
 - directory
 - exceptions
 - filepath
 - process
 - stm
-- prettyprinter
 
 language: GHC2024
 
@@ -74,6 +57,19 @@ ghc-options:
 - -Wno-orphans
 
 library:
+  dependencies:
+  - split
+  ## - aeson
+  ## - constraints
+  ## - extra
+  ## - fgl
+  ## - fgl-visualize
+  ## - free
+  ## - gloss
+  ## - hmatrix
+  ## - recursion-schemes
+  ## - vector
+  ## - prettyprinter
   source-dirs: src
 
 executables:
@@ -99,12 +95,15 @@ tests:
     source-dirs:         test
     dependencies:
     - icfpc2025
+    - utf8-string
+    - unicode-show
     - hspec
     - main-tester
 
   icfpc2025-doctest:
     main:                doctests.hs
     source-dirs:         test
+    other-modules:       []
     dependencies:
     - icfpc2025
     - doctest

@@ -20,6 +20,8 @@ import GHC.Generics
 import qualified Network.HTTP.Simple as HTTP
 import System.Environment (lookupEnv)
 
+import Base
+
 -- ------------------------------------------------------------------------
 
 initClient :: IO ()
@@ -46,15 +48,6 @@ explore plans = do
     Nothing -> fail ("parse error: " ++ show (HTTP.getResponseBody res))
     Just (Success (ExploreResponse results queryCount)) -> pure (results, queryCount)
     Just (Error e) -> fail (errorError e)
-
-type Layout = ([RoomLabel], RoomIndex, [((RoomIndex, Door), (RoomIndex, Door))])
-
--- | 2-bit room labels
-type RoomLabel = Int
-
-type RoomIndex = Int
-
-type Door = Int
 
 guess :: Layout -> IO Bool
 guess (rooms, startingRoom, connections) = do

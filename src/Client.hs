@@ -1,5 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
-module Client where
+module Client
+  ( initClient
+  , select
+  , explore
+  , guess
+  ) where
 
 import qualified Configuration.Dotenv as DotEnv
 import Control.Applicative

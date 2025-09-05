@@ -38,16 +38,8 @@ library
       ImplicitParams
       ImportQualifiedPost
       LambdaCase
-      LexicalNegation
       MultiWayIf
       NPlusKPatterns
-      OverloadedStrings
-      DataKinds
-      PolyKinds
-      NoStarIsType
-      TypeFamilyDependencies
-      UndecidableInstances
-      CPP
   ghc-options: -Wall -Wno-unticked-promoted-constructors -Wno-unused-imports -Wno-unused-top-binds -Wno-orphans
   build-depends:
       array
@@ -74,16 +66,8 @@ executable add-entry
       ImplicitParams
       ImportQualifiedPost
       LambdaCase
-      LexicalNegation
       MultiWayIf
       NPlusKPatterns
-      OverloadedStrings
-      DataKinds
-      PolyKinds
-      NoStarIsType
-      TypeFamilyDependencies
-      UndecidableInstances
-      CPP
   ghc-options: -Wall -Wno-unticked-promoted-constructors -Wno-unused-imports -Wno-unused-top-binds -Wno-orphans -rtsopts
   build-depends:
       array
@@ -110,16 +94,8 @@ executable icfpc2025
       ImplicitParams
       ImportQualifiedPost
       LambdaCase
-      LexicalNegation
       MultiWayIf
       NPlusKPatterns
-      OverloadedStrings
-      DataKinds
-      PolyKinds
-      NoStarIsType
-      TypeFamilyDependencies
-      UndecidableInstances
-      CPP
   ghc-options: -Wall -Wno-unticked-promoted-constructors -Wno-unused-imports -Wno-unused-top-binds -Wno-orphans -rtsopts
   build-depends:
       array
@@ -145,16 +121,8 @@ test-suite icfpc2025-doctest
       ImplicitParams
       ImportQualifiedPost
       LambdaCase
-      LexicalNegation
       MultiWayIf
       NPlusKPatterns
-      OverloadedStrings
-      DataKinds
-      PolyKinds
-      NoStarIsType
-      TypeFamilyDependencies
-      UndecidableInstances
-      CPP
   ghc-options: -Wall -Wno-unticked-promoted-constructors -Wno-unused-imports -Wno-unused-top-binds -Wno-orphans
   build-depends:
       array
@@ -188,16 +156,8 @@ test-suite icfpc2025-test
       ImplicitParams
       ImportQualifiedPost
       LambdaCase
-      LexicalNegation
       MultiWayIf
       NPlusKPatterns
-      OverloadedStrings
-      DataKinds
-      PolyKinds
-      NoStarIsType
-      TypeFamilyDependencies
-      UndecidableInstances
-      CPP
   ghc-options: -Wall -Wno-unticked-promoted-constructors -Wno-unused-imports -Wno-unused-top-binds -Wno-orphans
   build-depends:
       array

@@ -43,16 +43,16 @@ default-extensions:
 - ImplicitParams
 - ImportQualifiedPost
 - LambdaCase
-- LexicalNegation
 - MultiWayIf
 - NPlusKPatterns
-- OverloadedStrings
-- DataKinds
-- PolyKinds
-- NoStarIsType
-- TypeFamilyDependencies
-- UndecidableInstances
-- CPP
+## - LexicalNegation
+## - OverloadedStrings
+## - DataKinds
+## - PolyKinds
+## - NoStarIsType
+## - TypeFamilyDependencies
+## - UndecidableInstances
+## - CPP
 
 ghc-options:
 - -Wall

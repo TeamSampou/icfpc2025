@@ -1,12 +1,12 @@
 name:                icfpc2025
-version:             0.0.0
+version:             0.1.0.0
 github:              TeamSampou/icfpc2025
 license:             BSD3
 author:              Team Sampou
 maintainer:          nobsun@sampou.org
 copyright:           © 2025, Team Sampou
 
-extra-source-files:
+extra-doc-files:
 - README.md
 - ChangeLog.md
 

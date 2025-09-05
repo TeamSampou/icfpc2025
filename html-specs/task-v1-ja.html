@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://icfpcontest2025.github.io/specs/task_from_tex.html -->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang=""><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>-</title>
+  <link rel="stylesheet" href="./task-v1-ja_files/paper.min.css">
+      <link rel="stylesheet" href="./task-v1-ja_files/icfpc2024.css">
+  <style>
+    html {
+      line-height: 1.5;
+      /*font-family: Georgia, serif;*/
+      font-size: 20px;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+
+<style>
+  body { line-height: 1.5; max-width: 48rem; margin: auto; padding: 2rem; text-align: justify; }
+  h1, h2, h3, h4 { font-family: IM FELL DW Pica SC;
+    letter-spacing: 7px; font-weight: bold; margin-top: 2rem; }
+  h1 { font-size: 1.8rem; text-align: center; margin-bottom: 1.5rem; }
+  h2 { font-size: 1.4rem; border-bottom: 1px solid #aaa; padding-bottom: 0.3rem; }
+  h3 { font-size: 1.2rem; }
+  p { margin: 1rem 0; }
+  img {border:0;}
+  table { border-collapse: collapse; margin: 1rem auto; }
+  th, td { border: 1px solid #999; padding: 0.4rem 0.8rem; }
+  code, pre { background: #f6f6f6; padding: 0.2rem 0.4rem; border-radius: 4px; }
+  ul, ol { margin: 1rem 2rem; }
+  blockquote { border-left: 3px solid #aaa; padding-left: 1rem; color: #555; margin: 1rem 0; }
+  img { max-width: 100%; display: block; margin: auto; }
+  math, .math { font-size: 1.05em; }
+  .top_header{
+    text-align:center;
+    font-size:32pt;
+    margin-top:40px;
+  }
+  .top_subtitle{
+    text-align:center;
+    font-size:18pt;
+  }
+</style>
+
+</head>
+<body>
+  <img src="./task-v1-ja_files/header.png">
+  <div class="top_header" data-original-text="The Name of the Binding" style="word-break: normal;">変数束縛の名称 </div>
+  <div class="top_subtitle" data-original-text="ICFP Programming Contest 2025" style="word-break: normal;">ICFPプログラミングコンテスト 2025 </div>
+  <h1 class="unnumbered" id="top" data-original-text="TASK DESCRIPTION" style="word-break: normal;">課題説明 </h1> 
+<p style="font-style: italic; word-break: normal;" data-original-text=" Contestants are tasked with constructing a map of a labyrinthine library by collecting information during repeated exploratory expeditions. This is version 1.0 — see the changelog on the task page.">参加者の課題は、迷宮のような図書館の地図を作成することです。これは、複数回の探索遠征を通じて情報を収集することで達成されます。これはバージョン1.0です - 詳細は課題ページの変更履歴をご覧ください。 </p>
+<h2 class="unnumbered" id="background" data-original-text="BACKGROUND" style="word-break: normal;">背景 </h2>
+<div class="spacing">
+<p> <em data-original-text="In which our characters, Adso &amp; William, encounter the library at the Ædificium, and seek to uncover the secrets therein." style="word-break: normal;">物語の登場人物であるアドソとウィリアムは、エーディフィウム（建築群）内にある図書館に出会い、その秘密を解明しようと試みます。 </em></p>
+</div>
+<p data-original-text=" Adso of Milner and his master, William of Backus, have at last arrived at the famed monastery of St. Kleene, under the stewardship of the monks of the Holy Order of Evaluation, home of the world-renowned Library of Lambdas, where it is said that all of the world’s functions may be found." style="word-break: normal;"><img src="./task-v1-ja_files/sketch.jpg" style="width:45.0%" alt="image"> ミルナー家のアドソとその師であるバッカスのウィリアムは、ついに世界最高峰の修道院「聖クリーネ修道院」に到着しました。ここは評価の聖なる秩序に属する修道士たちが管理する、世界的に有名な「ラムダの図書館」の所在地であり、この世に存在するすべての関数が収められていると言われています。 </p>
+<p data-original-text="The library makes up the greatest part of the Ædificium: the large, imposing, fortress-like building casting a long shadow over the cloisters in the setting sun. It is closely guarded by the Abbot and his librarian, Alonzo of Curry, so William and Adso can only gain access to the library via skulduggery, sneaking into the Ædificium when the monks and nuns are busy at the International Conference on Functional Programming." style="word-break: normal;">図書館はエーディフィウムの大部分を占めています。それは巨大で威厳に満ちた、要塞のような建物で、夕日に照らされた回廊の上に長い影を落としています。 図書館は院長とその司書であるカリーのアロンゾによって厳重に管理されているため、ウィリアムとアドソは国際関数型プログラミング会議で修道士・修道女が忙しくしている隙を見計らって、巧妙な手段でエーディフィウムに侵入し、ようやく図書館にアクセスできるのです。 </p>
+<p data-original-text="The Ædificium is huge, and only Alonzo and the Abbot know all of its chambers and passages. Some even say that a curse lies on the library, and that any who enter unbidden will never find their way out again. William, a learned scholar of great intuition and logic, dismisses such superstitions out of hand, steadfast in his determination to uncover the secrets of the library. He exclaims in the fashion of his master, Hilbert, “Wir müssen wissen, wir werden wissen!”" style="word-break: normal;">エーディフィウムは広大な建造物であり、そのすべての部屋や通路の構造を把握しているのは、カリーのアロンゾ修道院長と修道院長だけです。中にはこの図書館には呪いがかけられており、許可なく入った者は二度と出口を見つけられないと言う者もいます。 ウィリアムは優れた直感力と論理力を持つ学者であり、このような迷信を一蹴し、図書館の秘密を解明するという決意を固くしています。彼は師であるヒルベルトの言葉を引用するように、「<em>我々は知らねばならない、必ず知るだろう！</em>」と断言します。 </p>
+<p data-original-text="Adso, ever doubtful and unsure, inquires of his master, “How shall we know where to go without the guidance of the librarian? We do not even have a map!&quot;" style="word-break: normal;">常に懐疑的で確信が持てないアドソは、師であるウィリアムに尋ねます。「司書の案内なしで、どうやって進むべき道を判断すればよいのでしょうか？地図さえ持っていないのに！」 </p>
+<p data-original-text="William, a devious glint behind his eyes, replies, “Well, my dear Adso, we shall have to make one.” " style="word-break: normal;">ウィリアムは目の奥に狡猾な光を宿しながら答えます。「さて、親愛なるアドソ君、自分たちで地図を作るしかありませんね」 <br>
+</p>
+<h2 class="unnumbered" id="the-ædificium" data-original-text="THE ÆDIFICIUM" style="word-break: normal;">エーディフィクム </h2>
+<div class="spacing">
+<p> <em data-original-text="In which the structure of the Library is described, as well as the nature of the task before William &amp; Adso." style="word-break: normal;">図書館の構造と、ウィリアムとアドソが取り組むべき課題の性質について説明します。 </em></p>
+</div>
+<p data-original-text="The Ædificium is comprised of a number of hexagonal rooms, each side of which has a door, labelled with a number 1–6. Through each door lies a passage to another room. The rooms themselves are also labelled, but the label is in a language that Adso cannot read. William understands the language, but with his failing eyesight, he can only discern the first two bits of the label. More than one room may have the same label. Passages may lead to the same room from which they started — or even the same door." style="word-break: normal;"><span class="lettrine">T</span><span class="smallcaps"></span><span class="smallcaps">he</span> Ædificium は、六角形の部屋が複数集まった構造をしており、各辺には1から6までの番号が記された扉があります。各扉の先には別室へと続く通路が存在します。部屋自体にもラベルが貼られていますが、その表記はアドソが読めない言語で書かれています。 ウィリアムはその言語を理解していますが、視力が衰えているため、ラベルの最初の2ビットしか判別できません。同じラベルが複数の部屋に付けられている場合もあります。通路によっては、出発した部屋や同じドアに戻ってくることもあります。 </p>
+<div class="center">
+<p><img src="./task-v1-ja_files/aedificium.png" style="width:45.0%" alt="image">
+</p><center><em data-original-text="An example of a 4-room Ædificium." style="word-break: normal;">4部屋構成のエーディフィウムの一例。 </em></center><br>
+<p></p>
+</div>
+<p data-original-text="To avoid getting lost, Adso &amp; William must devise a route plan before entering the library. A route plan consists of a series of numbers 0–5, indicating the sequence of doors through which they plan to travel, starting from the initial room. The route plans always start from the same room." style="word-break: normal;">道に迷わないために、アドソとウィリアムは図書館に入る前に&lt;ルート計画&gt;を策定しなければなりません。ルート計画とは、0から5までの数字の連続から構成され、最初の部屋からスタートして通過する予定の扉の順序を示します。すべてのルート計画は必ず同じ部屋から開始します。 </p>
+<p data-original-text="As they travel through the library according to their route plan, Adso will record the 2-bit integers that William reads from the label of each room. Thus, after executing a route plan of length x, Adso will have a record consisting of x 2-bit integers." style="word-break: normal;">ルートプランに従って図書館内を移動しながら、アドソはウィリアムが各部屋のラベルから読み取った2ビット整数を記録します。したがって、長さ<span class="math inline"><em>x</em></span>のルートプランを実行した後、アドソは<span class="math inline"><em>x</em></span>個の2ビット整数からなる記録を得ることになります。 </p>
+<p data-original-text="The task before Adso &amp; William is to construct a series of route plans such that they gain the information necessary to construct an accurate map of the library, in the form of an undirected graph, using as few expeditions into the library as possible. " style="word-break: normal;">アドソとウィリアムに課せられた課題は、図書館内の正確な地図（無向グラフ形式）を作成するために必要な情報を得るため、可能な限り少ない回数の探索で一連の経路計画を立案することです。 <br>
+</p>
+<h2 class="unnumbered" id="protocol" data-original-text="PROTOCOL" style="word-break: normal;">プロトコル </h2>
+<div class="spacing">
+<p> <em data-original-text="In which the format of route plans and Adso’s records are specified, as well as the representation of the map." style="word-break: normal;">ルート計画とAdsoの記録のフォーマット仕様、および地図の表示形式が規定されています。 </em></p>
+</div>
+<p data-original-text="Queries are made to the Ædificium by making an HTTP request to the server at the URL:" style="word-break: normal;"><span class="lettrine">Q</span><span class="smallcaps"></span><span class="smallcaps">uery</span> は、以下のURLのサーバーに対してHTTPリクエストを送信することでÆdificiumに問い合わせを行います： </p>
+<div class="center">
+<p><a href="https://31pwr5t6ij.execute-api.eu-west-2.amazonaws.com/" class="uri" data-original-text="https://31pwr5t6ij.execute-api.eu-west-2.amazonaws.com/" style="word-break: normal;">https://31pwr5t6ij.execute-api.eu-west-2.amazonaws.com/ </a></p>
+</div>
+<p data-original-text="POST /register registers a new team. Request Body: " style="word-break: normal;"><strong>POST <code>/register</code></strong> <span class="math inline">  </span> <em>新規チームの登録を行います。</em><br>
+<span class="smallcaps">リクエストボディ</span>: <br>
+</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb1-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb1-2"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"name"</span><span class="op">:</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"pl"</span><span class="op">:</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"email"</span><span class="op">:</span> <span class="dt">string</span></span>
+<span id="cb1-5"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p data-original-text="Response Body: " style="word-break: normal;"><span class="smallcaps">レスポンスボディ</span>: <br>
+</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb2-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb2-2"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"id"</span><span class="op">:</span> <span class="dt">string</span></span>
+<span id="cb2-3"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p data-original-text="The id given in the response is secret and used to identify your team in future requests. Remember it but do not disclose it publicly!" style="word-break: normal;">応答に含まれる<code>id</code>は<strong>機密情報</strong>であり、今後のリクエストでチームを識別するために使用されます。このIDは記憶しておいてくださいが、決して公開しないでください！ </p>
+<p data-original-text="POST /select selects a problem to solve. Request Body: " style="word-break: normal;"><strong>POST <code>/select</code></strong> <span class="math inline">  </span> <em>解決すべき問題を選択します。</em><br>
+<span class="smallcaps">リクエストボディ</span>: <br>
+</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb3-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-2"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"id"</span><span class="op">:</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"problemName"</span><span class="op">:</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p data-original-text="Response Body: " style="word-break: normal;"><span class="smallcaps">レスポンスボディ</span>: <br>
+</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb4-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb4-2"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"problemName"</span><span class="op">:</span> <span class="dt">string</span></span>
+<span id="cb4-3"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb4-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p data-original-text="The id should be exactly the same string produced by /register. The problemName may be any of the available problems, the full list of which is available on the leaderboard page. Each problem has a specified number of rooms, but the exact layout of the map is randomly generated each time a problem is selected." style="word-break: normal;"><code>id</code>は<code>/register</code>で生成された文字列と完全に一致している必要があります。<code>problemName</code>は利用可能な問題のいずれかを指定できます。利用可能な問題の完全なリストは、<a href="https://icfpcontest2025.github.io/aedificium.html">リーダーボードページ</a>で確認できます。 各問題にはあらかじめ設定された部屋数がありますが、問題を選択するたびにマップの正確なレイアウトはランダムに生成されます。 </p>
+<p data-original-text="For testing purposes, a simple three-room labyrinth, small enough to be solvable by hand, may also be selected by using the problem name &quot;probatio&quot;." style="word-break: normal;">テスト目的の場合、手動で解ける程度の小規模な3部屋の迷宮も、問題名<code>"probatio"</code>を使用して選択できます。 </p>
+<p data-original-text="Note if a problem is already selected, POSTing to /select will discard the old problem and generate a new one to solve." style="word-break: normal;">注意：既に問題が選択されている状態で <code>/select</code> に POST すると、
+現在の問題は破棄され、新たに解決すべき問題が生成されます。 </p>
+<p data-original-text="POST /explore explores the ædificium. Request Body: " style="word-break: normal;"><strong>POST <code>/explore</code></strong> <span class="math inline">  </span> <em>エーディフィウム（建造物）を探索します。</em><br>
+<span class="smallcaps">リクエストボディ</span>: <br>
+</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb5-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb5-2"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"id"</span><span class="op">:</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb5-3"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"plans"</span><span class="op">:</span> [<span class="dt">string</span>]<span class="op">,</span></span>
+<span id="cb5-4"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p data-original-text="Response Body: " style="word-break: normal;"><span class="smallcaps">レスポンスボディ</span>: <br>
+</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb6-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb6-2"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"results"</span><span class="op">:</span> [[int]]<span class="op">,</span></span>
+<span id="cb6-3"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"queryCount"</span><span class="op">:</span> int</span>
+<span id="cb6-4"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb6-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p data-original-text="Only POST to /explore after selecting a problem with /select." style="word-break: normal;"><code>/select</code> で問題を選択した後、<code>/explore</code> には POST メソッドでのみアクセスしてください。 </p>
+<p data-original-text="The id should be exactly the same string produced by /register. The plans field should consist of a list of route plans, each represented as a string of digits 0–5, specifying the numbers of each door to enter. For example, the string &quot;0325&quot; is the route plan that first enters door 0, then 3, then 2, then 5." style="word-break: normal;"><code>id</code> は、<code>/register</code> によって生成される文字列と完全に一致している必要があります。<code>plans</code> フィールドには、各ルート計画を表す数字の文字列リストを含める必要があります（各文字列は <code>0</code> から <code>5</code> までの数字で構成され、通過すべき各ドアの番号を指定します）。 例えば、文字列 <code>"0325"</code> は、ドア0、次にドア3、続いてドア2、最後にドア5の順に進入する経路計画を表します。 </p>
+<p data-original-text="The results field consists of a list of Adso’s records, one for each route plan submitted. Each record is a list of integer values — the 2-bit integer values observed by William upon entering each room. The queryCount field contains the total number of expeditions made into the Ædificium so far. Remember, Adso and William want to make as few expeditions into the library as possible, so guesses made with a low queryCount will rank higher in the leaderboards." style="word-break: normal;"><code>results</code>フィールドには、提出された各ルートプランに対応するアドソの記録がリスト形式で格納されています。各記録は、ウィリアムが各部屋に入った際に観測した2ビット整数値のリストです。 <code>queryCount</code> フィールドには、これまでにÆdificiumに対して行われた探検の総数が記録されています。AdsoとWilliamは図書館への探検回数を最小限に抑えたいと考えているため、<code>queryCount</code>値が低い推測ほどリーダーボードで上位に表示されます。 </p>
+<p data-original-text="Note: We allow multiple route plans to be submitted in a single HTTP request. This reduces our server costs, so to incentivise contestants batching their route plans, an additional one-point queryCount penalty applies per /explore request made." style="word-break: normal;"><span class="smallcaps">注記</span>: 単一のHTTPリクエストで複数のルートプランを送信することを許可しています。これによりサーバーコストを削減できるため、参加者がルートプランをまとめて送信するよう促すため、<code>/explore</code>リクエストごとに追加の1ポイント分の<code>queryCount</code>ペナルティが適用されます。 </p>
+<p data-original-text="POST /guess submit a candidate map. Request Body: " style="word-break: normal;"><strong>POST <code>/guess</code></strong> <span class="math inline">  </span> <em>候補となる地図データを送信します。</em><br>
+<span class="smallcaps">リクエストボディ</span>: <br>
+</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb7-2"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"id"</span><span class="op">:</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb7-3"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"map"</span><span class="op">:</span> {</span>
+<span id="cb7-4"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"rooms"</span><span class="op">:</span> [int]<span class="op">,</span></span>
+<span id="cb7-5"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"startingRoom"</span><span class="op">:</span> int<span class="op">,</span></span>
+<span id="cb7-6"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"connections"</span><span class="op">:</span> [</span>
+<span id="cb7-7"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-7" aria-hidden="true" tabindex="-1"></a>      {</span>
+<span id="cb7-8"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"from"</span><span class="op">:</span> { </span>
+<span id="cb7-9"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-9" aria-hidden="true" tabindex="-1"></a>          <span class="st">"room"</span><span class="op">:</span> int<span class="op">,</span> </span>
+<span id="cb7-10"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-10" aria-hidden="true" tabindex="-1"></a>          <span class="st">"door"</span><span class="op">:</span> int </span>
+<span id="cb7-11"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-11" aria-hidden="true" tabindex="-1"></a>        }<span class="op">,</span></span>
+<span id="cb7-12"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"to"</span><span class="op">:</span> { </span>
+<span id="cb7-13"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-13" aria-hidden="true" tabindex="-1"></a>          <span class="st">"room"</span><span class="op">:</span> int<span class="op">,</span> </span>
+<span id="cb7-14"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-14" aria-hidden="true" tabindex="-1"></a>          <span class="st">"door"</span><span class="op">:</span> int </span>
+<span id="cb7-15"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-15" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb7-16"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-16" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb7-17"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-17" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb7-18"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-19"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb7-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p data-original-text="Response Body: " style="word-break: normal;"><span class="smallcaps">レスポンスボディ</span>: <br>
+</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb8-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb8-2"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"correct"</span><span class="op">:</span> <span class="dt">boolean</span></span>
+<span id="cb8-3"><a href="https://icfpcontest2025.github.io/specs/task_from_tex.html#cb8-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p data-original-text="Only POST to /guess after selecting a problem with /select." style="word-break: normal;"><code>/select</code> で問題を選択した後、<code>/guess</code> へのPOSTリクエストのみ送信してください。 </p>
+<p data-original-text="The id should be exactly the same string produced by /register. The map field contains a description of the layout of the library. The rooms field of this description is a list of the 2-bit integer labels read by William, one per room. Rooms are identified by their index into this list. The startingRoom field specifies the index of the initial room. The connections field contains a list of objects that specify how each room is connected, where the room fields specify the index of a room and the door field specifies a door number, 0–5. Note that the graph constructed is undirected, so if one has already connected, say, from door 3 of room 5 to door 0 of room 2, there is no need to connect from door 0 of room 2 to door 3 of room 5 — this connection will already exist." style="word-break: normal;"><code>id</code> は、<code>/register</code> で生成された文字列と完全に一致している必要があります。<code>map</code> フィールドには、図書館のレイアウトに関する説明が記載されています。この説明の <code>rooms</code> フィールドは、ウィリアムが各部屋ごとに読み取った2ビット整数ラベルのリストです。部屋はこのリストのインデックスによって識別されます。 <code>startingRoom</code> フィールドは初期部屋のインデックスを指定します。<code>connections</code> フィールドには、各部屋の接続方法を定義するオブジェクトのリストが含まれており、<code>room</code> フィールドは部屋のインデックスを、<code>door</code> フィールドはドア番号（0～5）をそれぞれ指定します。 注意：構築されるグラフは無向グラフです。例えば、部屋5のドア3から部屋2のドア0への接続が既に存在する場合、部屋2のドア0から部屋5のドア3への接続を新たに定義する必要はありません。この接続は自動的に存在することになります。 </p>
+<p data-original-text="The field correct is true iff the submitted map is equivalent to the map generated when /select was invoked. By equivalent, we mean that they have the same number of rooms, and that they are indistinguishable by any route plan — if there is no route plan that demonstrates the difference between two maps of the same size, they are considered equivalent." style="word-break: normal;"><code>correct</code> フィールドは、提出された地図が <code>/select</code> コマンド実行時に生成された地図と<em>等価</em>である場合にのみ <code>true</code> となります。 「同等」とは、以下の条件を満たすことを意味します：
+・部屋の数が同一であること
+・いかなる経路計画によっても区別できないこと ― 同じサイズの2つの地図間に違いを示す経路計画が存在しない場合、それらは同等とみなされます。 </p>
+<p data-original-text="If a correct map is submitted, if the queryCount for your team is an improvement on your previous score for the currently selected problem, then your score is updated." style="word-break: normal;">正しい地図が提出された場合、チームの<code>queryCount</code>が現在選択されている問題に対するこれまでのスコアを上回っている場合、スコアが更新されます。 </p>
+<p data-original-text="Regardless of if the submitted map is correct or not, the problem will be deselected and the library cleared when /guess is invoked. This means that, if your guess was incorrect, you will have to start again on a new map with /select. " style="word-break: normal;">提出されたマップが正解であるか否かにかかわらず、<em>問題は選択解除</em>され、<code>/guess</code>コマンドが実行されるとライブラリがクリアされます。つまり、もしあなたの推測が間違っていた場合、<code>/select</code>コマンドを使って新しいマップからやり直す必要があります。 <br>
+</p>
+<h2 class="unnumbered" id="scoring" data-original-text="SCORING" style="word-break: normal;">採点方法 </h2>
+<div class="spacing">
+<p> <em data-original-text="In which the criteria by which entries are evaluated are given, along with pointers to global scoreboards." style="word-break: normal;">ここには、提出作品の評価基準と、グローバルスコアボードへの参照情報が記載されています。 </em></p>
+</div>
+<p data-original-text="Grading of correct maps is based on the efficiency with which they were produced: Specifically, the amount of expeditions required to produce the graph." style="word-break: normal;"><span class="lettrine">G</span><span class="smallcaps"></span><span class="smallcaps">採点基準</span>は、正解マップが生成される際の
+<em>効率性</em>に基づいています。具体的には、グラフを生成するために必要な遠征回数が評価対象となります。 </p>
+<p data-original-text="Each team is ranked on the local leaderboard for each problem, with the team that required the fewest expeditions to correctly generate the map ranked first, and all teams that have not (yet) submitted a correct solution to that problem ranked equal last." style="word-break: normal;">各チームは、各問題ごとにローカルリーダーボード上で順位付けされます。正解マップを最も少ない遠征回数で生成したチームが1位となり、その問題に対してまだ正解を提出していないチームはすべて同率で最下位となります。 </p>
+<div class="wrapfigure">
+<p><img src="./task-v1-ja_files/borda.png.jpg" style="width:20.0%" alt="image"></p>
+</div>
+<p data-original-text="The global leaderboard is computed using the Borda count method, similar to last year’s contest. For each problem, each team is given one point for every other team that places strictly worse in the rankings. The team that has the most points across all problems is ranked first in the global leaderboard. An important property of this system is that absolute scores for a problem do not matter — only the relative order." style="word-break: normal;"><a href="https://icfpcontest2025.github.io/aedificium.html">グローバルリーダーボード</a>は、昨年のコンテストと同様のボルダ投票方式で算出されます。各問題について、各チームは他のすべてのチームと比較して順位が下位であればあるほど多くのポイントを獲得します（厳密に下位のチーム数に応じてポイントが付与されます）。 すべての問題を通じて最も多くのポイントを獲得したチームがグローバルリーダーボードで1位となります。このシステムの重要な特徴は、個々の問題における絶対的なスコアは重要ではなく、相対的な順位のみが考慮されるという点です。 </p>
+<p data-original-text="The leaderboards are updated every few minutes throughout most of the contest, however they are temporarily frozen two hours before the end of the lightning round and also in the last two hours of the contest, to add to the suspense. " style="word-break: normal;">リーダーボードはコンテスト期間中、数分おきに更新されますが、ライトニングラウンド終了の2時間前とコンテスト最後の2時間は一時的に更新を停止し、緊張感を高める演出が行われます。 <br>
+</p>
+<h2 class="unnumbered" id="submission" data-original-text="SUBMISSION" style="word-break: normal;">提出方法 </h2>
+<div class="spacing">
+<p> <em data-original-text="In which the method of participation and entry submission is described, as well as the dates during which this is available." style="word-break: normal;">本コンテストへの参加方法および作品提出手順、および作品提出が可能な期間について説明します。 </em></p>
+</div>
+<p data-original-text="To be considered for prizes, your team must submit their code. This is accomplished by the following Google form. Include your id from /register and a URL at which your code can be accessed (for example, a Git repository). Don’t make your code public until after the contest." style="word-break: normal;"><span class="lettrine">T</span><span class="smallcaps"></span><span class="smallcaps">o</span> 賞品の選考対象となるには、チームはコードを提出する必要があります。これは以下のGoogleフォームを使用して行います。
+<code>/register</code> で取得した<code>id</code>と、コードにアクセス可能なURL（例：Gitリポジトリ）を必ず記載してください。コンテスト終了まではコードを公開しないようご注意ください。 </p>
+<div class="center">
+<p><a href="https://forms.gle/M5SNTamHvoc6zWHq7" class="uri" data-original-text="https://forms.gle/M5SNTamHvoc6zWHq7" style="word-break: normal;">https://forms.gle/M5SNTamHvoc6zWHq7 </a></p>
+</div>
+<p data-original-text="This form closes 3 hours after the end of the contest. It is not necessary to make a separate submission for the lightning round, but please include a README file indicating which parts are from the first 24 hours." style="word-break: normal;">このフォームはコンテスト終了時刻から3時間後に締め切られます。ライトニングラウンド用の提出は個別に行う必要はありませんが、どの部分が最初の24時間分の成果であるかを明記したREADMEファイルを必ず添付してください。 </p>
+<p data-original-text="Note that we also hand out a “jury prize”, so being on top of the scoreboard is not required to win (but it is a recommended way of winning)." style="word-break: normal;">なお、「審査員特別賞」も授与されますので、スコアボードで上位にランクインしていなくても受賞の可能性はあります（ただし、これが受賞するための推奨方法です）。 </p>
+
+
+<div id="translation-tooltip" style="position: fixed; padding: 12px 16px; background-color: rgba(30, 41, 59, 0.95); color: rgb(226, 232, 240); border-radius: 8px; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, &quot;Noto Sans&quot;, sans-serif; text-align: left; user-select: text; line-height: 1.5; white-space: pre-wrap; max-width: 400px; box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px; z-index: 2147483647; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; left: 192px; top: 66.5938px;"><div style="font-size: 12px; color: rgb(148, 163, 184); margin-bottom: 2px; font-weight: 500; line-height: 1.2;">原文:</div><div style="color: rgb(241, 245, 249); line-height: 1.3;">Response Body: </div><div style="position: absolute; bottom: 100%; left: 20px; width: 0px; height: 0px; border-style: solid; border-width: 0px 6px 6px; border-color: transparent transparent rgba(30, 41, 59, 0.95);"></div></div></body></html>

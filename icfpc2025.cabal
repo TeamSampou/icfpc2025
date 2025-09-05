@@ -1,6 +1,6 @@
 cabal-version: 1.18
 
--- This file has been generated from package.yaml by hpack version 0.38.2.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -95,6 +95,34 @@ executable icfpc2025
       Paths_icfpc2025
   hs-source-dirs:
       app
+  default-extensions:
+      ImplicitParams
+      ImportQualifiedPost
+      LambdaCase
+      MultiWayIf
+      NPlusKPatterns
+  ghc-options: -Wall -Wno-unticked-promoted-constructors -Wno-unused-imports -Wno-unused-top-binds -Wno-orphans -rtsopts
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , bytestring
+    , directory
+    , exceptions
+    , filepath
+    , icfpc2025
+    , mtl
+    , process
+    , stm
+    , text
+    , time
+  default-language: GHC2024
+
+executable oga-solve1
+  main-is: Main.hs
+  other-modules:
+      Paths_icfpc2025
+  hs-source-dirs:
+      app/oga
   default-extensions:
       ImplicitParams
       ImportQualifiedPost

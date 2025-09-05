@@ -98,6 +98,14 @@ executables:
     dependencies:
     - icfpc2025
 
+  oga-solve1:
+    main:                 Main.hs
+    source-dirs:          app/oga
+    ghc-options:
+    - -rtsopts
+    dependencies:
+    - icfpc2025
+
 tests:
   icfpc2025-test:
     main:                spec.hs

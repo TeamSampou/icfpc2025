@@ -36,6 +36,21 @@ explore plans = do
     Just (Success (ExploreResponse results queryCount)) -> pure (results, queryCount)
     Just (Error e) -> fail (errorError e)
 
+type Room = Int
+
+type Door = Int
+
+guess :: ([Room], Room, [((Room, Door), (Room, Door))]) -> IO Bool
+guess (rooms, startingRoom, connections) = do
+  Just teamId <- lookupEnv "ID"
+  initReq <- HTTP.parseRequest "POST https://31pwr5t6ij.execute-api.eu-west-2.amazonaws.com/guess"
+  let req = HTTP.setRequestBodyJSON (GuessRequest teamId (GuessRequestMap rooms startingRoom [Connection (RoomDoor room1 door1) (RoomDoor room2 door2) | ((room1,door1), (room2,door2)) <- connections])) initReq
+  res <- HTTP.httpLbs req
+  case J.decode (HTTP.getResponseBody res) of
+    Nothing -> fail ("parse error: " ++ show (HTTP.getResponseBody res))
+    Just (Success (GuessResponse correct)) -> pure correct
+    Just (Error e) -> fail (errorError e)
+
 customOptions :: String -> J.Options
 customOptions prefix =
   J.defaultOptions
@@ -85,6 +100,72 @@ instance J.ToJSON ExploreResponse where
 
 instance J.FromJSON ExploreResponse where
   parseJSON = J.genericParseJSON (customOptions "exploreResponse")
+
+
+data GuessRequest
+  = GuessRequest
+  { guessRequestId :: String
+  , guessRequestMap :: GuessRequestMap
+  }
+  deriving (Generic)
+
+instance J.ToJSON GuessRequest where
+  toEncoding = J.genericToEncoding (customOptions "guessRequest")
+
+instance J.FromJSON GuessRequest where
+  parseJSON = J.genericParseJSON (customOptions "guessRequest")
+
+data GuessRequestMap
+  = GuessRequestMap
+  { guessRequestMapRooms :: [Int]
+  , guessRequestMapStartingRoom :: Int
+  , guessRequestMapConnections :: [Connection]
+  }
+  deriving (Generic)
+
+instance J.ToJSON GuessRequestMap where
+  toEncoding = J.genericToEncoding (customOptions "guessRequestMap")
+
+instance J.FromJSON GuessRequestMap where
+  parseJSON = J.genericParseJSON (customOptions "guessRequestMap")
+
+data Connection
+  = Connection
+  { connectionFrom :: RoomDoor
+  , connectionTo :: RoomDoor
+  }
+  deriving (Generic)
+
+instance J.ToJSON Connection where
+  toEncoding = J.genericToEncoding (customOptions "connection")
+
+instance J.FromJSON Connection where
+  parseJSON = J.genericParseJSON (customOptions "connection")
+
+data RoomDoor
+  = RoomDoor
+  { roomDoorRoom :: Int
+  , roomDoorDoor :: Int
+  }
+  deriving (Generic)
+
+instance J.ToJSON RoomDoor where
+  toEncoding = J.genericToEncoding (customOptions "roomDoor")
+
+instance J.FromJSON RoomDoor where
+  parseJSON = J.genericParseJSON (customOptions "roomDoor")
+
+data GuessResponse
+  = GuessResponse
+  { guessResponseCorrect :: Bool
+  }
+  deriving (Generic)
+
+instance J.ToJSON GuessResponse where
+  toEncoding = J.genericToEncoding (customOptions "guessResponse")
+
+instance J.FromJSON GuessResponse where
+  parseJSON = J.genericParseJSON (customOptions "guessResponse")
 
 
 data OrError a

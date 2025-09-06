@@ -14,6 +14,7 @@ import qualified Configuration.Dotenv as DotEnv
 import Control.Applicative
 import qualified Data.Aeson as J
 import Data.Char (toLower)
+import Data.Functor
 import Data.List (stripPrefix)
 import qualified Data.Map.Strict as Map
 import GHC.Generics
@@ -21,6 +22,7 @@ import qualified Network.HTTP.Simple as HTTP
 import System.Environment (lookupEnv)
 
 import Base
+import FilesIO (selectStamp, writeExplores, writeSolutions)
 
 -- ------------------------------------------------------------------------
 
@@ -35,7 +37,7 @@ select problemName = do
   res <- HTTP.httpLbs req
   case J.decode (HTTP.getResponseBody res) of
     Nothing -> fail ("parse error: " ++ show (HTTP.getResponseBody res))
-    Just (Success (SelectResponse name)) -> pure name
+    Just (Success (SelectResponse name)) -> selectStamp name $> name
     Just (Error e) -> fail (errorError e)
 
 explore :: [String] -> IO ([[Int]], Int)
@@ -44,7 +46,9 @@ explore plans = do
   initReq <- HTTP.parseRequest "POST https://31pwr5t6ij.execute-api.eu-west-2.amazonaws.com/explore"
   let req = HTTP.setRequestBodyJSON (ExploreRequest teamId plans) initReq
   res <- HTTP.httpLbs req
-  case J.decode (HTTP.getResponseBody res) of
+  let respBody = HTTP.getResponseBody res
+  writeExplores plans respBody {- writing request and response to files -}
+  case J.decode respBody of
     Nothing -> fail ("parse error: " ++ show (HTTP.getResponseBody res))
     Just (Success (ExploreResponse results queryCount)) -> pure (results, queryCount)
     Just (Error e) -> fail (errorError e)
@@ -53,8 +57,11 @@ guess :: Layout -> IO Bool
 guess (rooms, startingRoom, connections) = do
   Just teamId <- lookupEnv "ID"
   initReq <- HTTP.parseRequest "POST https://31pwr5t6ij.execute-api.eu-west-2.amazonaws.com/guess"
-  let req = HTTP.setRequestBodyJSON (GuessRequest teamId (GuessRequestMap rooms startingRoom [Connection (RoomDoor room1 door1) (RoomDoor room2 door2) | ((room1,door1), (room2,door2)) <- connections])) initReq
+  let guessMap = GuessRequestMap rooms startingRoom [Connection (RoomDoor room1 door1) (RoomDoor room2 door2) | ((room1,door1), (room2,door2)) <- connections]
+  let req = HTTP.setRequestBodyJSON (GuessRequest teamId guessMap) initReq
   res <- HTTP.httpLbs req
+  let respBody = HTTP.getResponseBody res
+  writeSolutions guessMap respBody
   case J.decode (HTTP.getResponseBody res) of
     Nothing -> fail ("parse error: " ++ show (HTTP.getResponseBody res))
     Just (Success (GuessResponse correct)) -> pure correct

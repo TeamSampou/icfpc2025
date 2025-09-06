@@ -1,12 +1,16 @@
 module Main where
 
+import Control.Monad (when)
 import Data.List
+import Data.Foldable (foldrM)
+import Data.Function (on)
+import Data.Maybe (catMaybes)
 import Debug.Trace
 import Data.Tuple (swap)
 import System.Environment
 
+import Base
 import Client
-
 
 
 main :: IO ()
@@ -23,93 +27,130 @@ main =  do
             putStrLn $ if ok then "Success!" else "NG!"
 
 
-type Room = Int
+-- | 部屋ラベルと部屋までの道のり(プラン)
+type RoomP  = (RoomLabel, Plan)
 
-type RoomId = Int
-type Path   = String
-type RoomP  = (Room, Path)
-
+-- | ドアは全部開いたが, まだ部屋番号(RoomIndex)が確定していない部屋データ
 type RoomRaw = (RoomP, [(Door, RoomP)])
 
+-- | 部屋番号が確定した部屋データ (まぁFはFixの略ということにしておこう(適当))
 data RoomF = RoomF
   { rfLabel :: Int
-  , rfDoors :: [(Door, RoomId)]
-  , rfId    :: RoomId
-  , rfPath  :: Path
+  , rfDoors :: [(Door, RoomP)]
+  , rfIndex :: RoomIndex
+  , rfPlan  :: Plan
   } deriving Show
 
-fromRoomRawToF :: RoomRaw -> RoomF
-fromRoomRawToF ((rno, path), ds) =
+data RoomZ = RoomZ
+  { rzLabel :: Int
+  , rzDoors :: [((Door, RoomP), RoomIndex)]
+  , rzIndex :: RoomIndex
+  , rzPlan  :: Plan
+  } deriving Show
+
+-- | 部屋番号を確定する
+rawToFixRoom :: RoomRaw -> RoomIndex -> RoomF
+rawToFixRoom ((label, plan), doors) rid =
     RoomF 
-    { rfLabel = rno
-    , rfId = rno
-    , rfPath = path
-    , rfDoors = [(d,r) | (d,(r,ps))<-ds]
+    { rfLabel = label
+    , rfIndex = rid
+    , rfPlan  = plan
+    , rfDoors = sort doors
     }
 
-solve :: Int -> IO [RoomF]
-solve limit =  solve' limit [] [(0,"")]
+-- 隣接の部屋番号も確定する
+fixToZRoom :: RoomF -> [(Door,RoomIndex)] -> RoomZ
+fixToZRoom room doors =
+    RoomZ
+    { rzLabel = rfLabel room
+    , rzIndex = rfIndex room
+    , rzPlan  = rfPlan  room
+    , rzDoors = zip (sort $ rfDoors room) (map snd $ sort doors)
+    }
 
 
-
-solve' :: Int -> [RoomF] -> [RoomP] -> IO [RoomF]
-solve' 0 knownRooms _  = trace "limit"   $ return []
-solve' _ knownRooms [] = trace "ended" $ return knownRooms
-solve' limit knownRooms nrs@((_rno,path):nextRooms) = do
-    traceIO $ "count " ++ show limit ++ ", knowns=" ++ show(length knownRooms) ++ ", nexts=" ++ show(length nextRooms+1)
-    mapM_ print knownRooms
-    print nrs
-    raw <- openAllDoor path
-    let (knowns', nexts) = updateKnownRooms knownRooms raw
-        nexts'           = foldr (flip mergeRooms) nextRooms nexts
-    solve' (limit-1) knowns' nexts'
-
-formatAnswer :: [RoomF] ->  ([Room], Room, [((Room, Door), (Room, Door))])
-formatAnswer rooms =
-    (sort $ map rfLabel rooms, 0, calcDoorPair rooms)
+solve :: Int -> IO [RoomZ]
+solve limit = do
+    (_,_,zRooms) <- solve' limit [] [] (0,"")
+    return zRooms
 
 
-calcDoorPair ::  [RoomF] -> [((Room, Door), (Room, Door))]
-calcDoorPair rooms = trace (show conns) $
-    pair [] conns
+solve' 
+    :: Int      -- ^ 探索上限
+    -> [RoomF]  -- ^ 既知の部屋
+    -> [RoomZ]  -- ^ 確定した部屋
+    -> RoomP    -- ^ いま調べる対象の部屋
+    -> IO (RoomIndex, [RoomF], [RoomZ])  -- ^ 対象部屋の番号と更新された部屋情報
+solve' 0       _       _       _       = error "limit reached, abort."
+solve' limit  fixRooms zRooms (_,plan) = do
+    putStrLn $ "count " ++ show limit ++ ", fixRooms=" ++ show(length fixRooms) ++ ", zRooms=" ++ show(length zRooms) ++ ", plan=" ++ plan
+    when (limit`div`5==1) $ mapM_ print  fixRooms
+    -- とりあえず全部のドアを開ける
+    raw@(room,neighbors) <- openAllDoor plan
+    -- ドアパターンを既知の部屋を比較して部屋番号を確定する
+    let (known, rid, fixRooms') = updateFixRooms fixRooms raw
+    if known
+        then return (rid, fixRooms', zRooms)
+        else do
+        -- 隣接の部屋の番号も確定させる
+        (nids, limit', fixRooms'', zRooms') <-  foldrM f ([],limit-1,fixRooms',zRooms) (map snd neighbors)
+        -- ようやく全部確定
+        return (rid, fixRooms'', fixToZRoom (rawToFixRoom raw rid) (zip[0..]nids) : zRooms')
     where
-        conns = [ ((room1,room2),d)  | r <-rooms, let room1 = rfLabel r, (d,room2)<-rfDoors r]
+        f n (rs,lim,frs,zrs) = do
+            (i,frs',zrs') <- solve' lim frs zrs n
+            return (rs++[i], lim-1, frs', zrs')
 
-        pair acc []     = acc
-        pair acc (((r1,r2),d):rests) 
-            | r1 == r2  = pair (((r1,d),(r1,d)):acc) rests
+
+formatAnswer :: [RoomZ] -> Layout
+formatAnswer rooms =
+    ( map rzLabel $ sortBy (compare`on`rzIndex) rooms
+    , rzIndex $ head rooms -- まぁ最後に先頭にいれてるはずだから...
+    , calcDoorPair rooms
+    )
+
+
+-- | とりあえずペアになってるドアを貪欲につなげていくだけ
+calcDoorPair ::  [RoomZ] -> [((RoomIndex, Door), (RoomIndex, Door))]
+calcDoorPair rooms =
+    go [] [ ((room1,room2),d)  | r <-rooms, let room1 = rzIndex r, ((d,_),room2)<-rzDoors r]
+    where
+        go acc []     = acc
+        go acc (((r1,r2),d):rests) 
+            | r1 == r2  = go (((r1,d),(r1,d)):acc) rests
             | otherwise = let (xs,((a,b),c):ys) = break (\((a,b),c)-> r1==b && r2==a) rests
-                          in pair (((r1,d),(r2,c)):acc) (xs++ys)
+                          in go (((r1,d),(r2,c)):acc) (xs++ys)
 
 
-allDoors :: [Path]
+allDoors :: [Plan]
 allDoors = ["0","1","2","3","4","5"]
 
-openAllDoor :: Path -> IO RoomRaw
-openAllDoor path = do
-    (rss, _count) <- explore (map (path++) allDoors)
-    let len = length path
-        --部屋番号
-        rno = head $ drop len $ head rss
-    return ((rno,path), [(i, (r, path++show i)) | (i,r)<- zip [0..] [ last rs | rs <-rss]] )
+-- | プランで辿りつく部屋の全部のドアを開けるだけ
+openAllDoor :: Plan -> IO RoomRaw
+openAllDoor plan = do
+    (rss, _count) <- explore (map (plan++) allDoors)
+    let len = length plan
+        label = head $ drop len $ head rss
+    return ((label,plan), [(i, (r, plan++show i)) | (i,r)<- zip [0..] [ last rs | rs <-rss]] )
 
 
---既知の部屋リストを更新して, 次に探索すべき部屋を返す
-updateKnownRooms :: [RoomF] -> RoomRaw -> ([RoomF], [RoomP])
-updateKnownRooms knowns raw =
-    if any (isSameLabelAndDoors roomf) knowns
-        then (knowns, [])
-        else (roomf:knowns, map snd (snd raw))
-        -- TODO この辺でラベル重複をみつけて区別する
+-- | 既知の部屋リストを更新つつ, 対象の部屋の番号を確定する
+updateFixRooms :: [RoomF] -> RoomRaw -> (Bool, RoomIndex, [RoomF])
+updateFixRooms fixs raw =
+    case catMaybes (map (`isSameRoom`raw) fixs) of
+        rid:_ -> (True, rid, fixs) -- 既知
+        _     -> (False, nextIndex, rawToFixRoom raw nextIndex : fixs) -- 新規
     where
-        roomf = fromRoomRawToF raw
-    
-mergeRooms :: [RoomP] -> RoomP -> [RoomP]
-mergeRooms rs r =
-    if (fst r)`elem` (map fst rs)
-        then rs else rs++[r]
+        -- 番号は新しい部屋が見つかった順に振っていくだけ
+        nextIndex = maximum (-1 : map rfIndex fixs) + 1
 
-isSameLabelAndDoors :: RoomF -> RoomF -> Bool
-isSameLabelAndDoors r1 r2 =
-    rfLabel r1 == rfLabel r2 && rfDoors r1 == rfDoors r2
--- TODO 同じラベルで違いドアパターンだった場合, 部屋を区別するためにrfIdに別数字を割り当てる
+
+-- | 同じ部屋(==同じラベルでドアパターンも同じ)だったら部屋番号を返す
+isSameRoom :: RoomF -> RoomRaw -> Maybe RoomIndex
+isSameRoom r1 ((label2, _), doors2) =
+    if label1 == label2 && doors1 == (sort $ map f doors2) then Just (rfIndex r1) else Nothing
+    where
+        label1 = rfLabel r1
+        doors1 = map f (rfDoors r1) -- ソート済み
+
+        f (a,(b,_)) = (a,b)

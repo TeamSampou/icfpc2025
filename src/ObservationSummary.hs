@@ -13,14 +13,18 @@ module ObservationSummary
  , fromList
  , toList
  , lookup
+ , keys
  ) where
 
 import Prelude hiding (lookup)
 
 import Control.Monad
+import qualified Data.Foldable as F
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.List (foldl1')
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -104,5 +108,11 @@ lookup [] (Node l _children) = Just l
 lookup (d : ds) (Node _ children) = do
   ch <- IntMap.lookup (read [d]) children
   lookup ds ch
+
+keys :: forall a. Trie a -> [Plan]
+keys = map (concat . map show . F.toList) . f Seq.empty
+  where
+    f :: Seq Door -> Trie a -> [Seq Door]
+    f hist (Node _ children) = hist : concat [f (hist Seq.|> d) ch | (d, ch) <- IntMap.toList children]
 
 -- ------------------------------------------------------------------------

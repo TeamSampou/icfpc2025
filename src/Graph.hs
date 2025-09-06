@@ -2,6 +2,8 @@ module Graph
   ( DiGraph
   , fromTrie
   , toLayout
+  , toDotGraph
+  , writePng
   ) where
 
 import Control.Exception (assert)
@@ -10,10 +12,19 @@ import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
+import Data.List (intercalate)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Vector (Vector)
 import qualified Data.Vector as V
+
+import qualified Data.GraphViz.Attributes as GraphViz
+import qualified Data.GraphViz.Commands as GraphViz
+import qualified Data.GraphViz.Commands.IO as GraphViz
+import qualified Data.GraphViz.Types.Generalised as GraphViz
+import qualified Data.GraphViz.Types.Monadic as GraphViz
 
 import Base
 import ObservationSummary (Trie)
@@ -71,6 +82,23 @@ toLayout (g, startingRoom) =
     cs :: Map (RoomIndex,RoomIndex) IntSet
     cs = Map.fromListWith IntSet.union [((room1, room2), IntSet.singleton d) | (room1, (_, outs)) <- zip [0..] (V.toList g), (d, room2) <- IntMap.toList outs]
 
+toDotGraph :: (DiGraph, RoomIndex) -> GraphViz.DotGraph Text
+toDotGraph (g, startingRoom) = GraphViz.digraph' $ do
+  forM_ (zip [0..] (V.toList g)) $ \(i, (label, outs)) -> do
+    let name1 = indexToNodeName i
+    GraphViz.node name1 $ [GraphViz.toLabel (show label)] ++ [GraphViz.shape GraphViz.DoubleCircle | i == startingRoom]
+    let tmp = IntMap.fromListWith IntSet.union [(j, IntSet.singleton d) | (d,j) <- IntMap.toList outs]
+    forM_ (IntMap.toList tmp) $ \(j, ds) -> do
+      let name2 = indexToNodeName j
+      GraphViz.edge name1 name2 [GraphViz.toLabel (intercalate "," $ map show $ IntSet.toList ds)]
+  where
+    indexToNodeName :: RoomIndex -> Text
+    indexToNodeName i = T.pack $ "node" ++ show i
+
+writePng :: FilePath -> (DiGraph, RoomIndex) -> IO ()
+writePng fname g = void $ GraphViz.runGraphviz (toDotGraph g) GraphViz.Png fname
+
+
 {-
 probatioで手動で試した以下のデータの場合。
 
@@ -95,3 +123,6 @@ _test_fromTrie = fromTrie 3 $ fmap (\label -> (label, label)) c
 
 _test_toLayout :: Layout
 _test_toLayout = toLayout _test_fromTrie
+
+_test_writePng :: IO ()
+_test_writePng = writePng "test.png" _test_fromTrie

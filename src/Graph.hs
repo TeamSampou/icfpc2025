@@ -32,7 +32,7 @@ type DiGraph = Vector (RoomLabel, IntMap RoomIndex)
 --
 -- 実装効率悪そう
 fromTrie :: Int -> Trie (RoomLabel, RoomIndex) -> (DiGraph, RoomIndex)
-fromTrie numRooms trie@(Trie.Node (_, initRoomId) _) = (V.generate numRooms g, initRoomId)
+fromTrie numRooms trie@(Trie.Node (_, startingRoom) _) = (V.generate numRooms g, startingRoom)
   where
     g :: Int -> (RoomLabel, IntMap RoomIndex)
     g i = assert (i == roomId) $ (label, fmap (\(Trie.Node (label', _) _) -> label') children)

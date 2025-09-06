@@ -100,6 +100,7 @@ updateKnownRooms knowns raw =
     if any (isSameLabelAndDoors roomf) knowns
         then (knowns, [])
         else (roomf:knowns, map snd (snd raw))
+        -- TODO この辺でラベル重複をみつけて区別する
     where
         roomf = fromRoomRawToF raw
     
@@ -111,3 +112,4 @@ mergeRooms rs r =
 isSameLabelAndDoors :: RoomF -> RoomF -> Bool
 isSameLabelAndDoors r1 r2 =
     rfLabel r1 == rfLabel r2 && rfDoors r1 == rfDoors r2
+-- TODO 同じラベルで違いドアパターンだった場合, 部屋を区別するためにrfIdに別数字を割り当てる

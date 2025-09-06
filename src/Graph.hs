@@ -1,6 +1,7 @@
 module Graph
   ( DiGraph
   , fromTrie
+  , enumGraph
   , toLayout
   , toDotGraph
   , writePng
@@ -8,6 +9,8 @@ module Graph
 
 import Control.Exception (assert)
 import Control.Monad
+import Control.Monad.State
+import qualified Data.Foldable as F
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.IntSet (IntSet)
@@ -15,6 +18,8 @@ import qualified Data.IntSet as IntSet
 import Data.List (intercalate)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Vector (Vector)
@@ -27,7 +32,7 @@ import qualified Data.GraphViz.Types.Generalised as GraphViz
 import qualified Data.GraphViz.Types.Monadic as GraphViz
 
 import Base
-import ObservationSummary (Trie)
+import ObservationSummary (ObservationSummary, Trie)
 import qualified ObservationSummary as Trie
 
 -- | 有向グラフ表現
@@ -56,6 +61,31 @@ fromTrie numRooms trie@(Trie.Node (_, startingRoom) _) = (V.generate numRooms g,
       where
         f :: Trie (RoomLabel, RoomIndex) -> IntMap (Trie (RoomLabel, RoomIndex))
         f t@(Trie.Node (_, roomId) children) = IntMap.unionsWith Trie.union $ IntMap.singleton roomId t : map f (IntMap.elems children)
+
+-- | 与えられた部屋数と 'ObservationSummary' から、それに整合的なグラフ構造を列挙する
+enumGraph :: Int -> ObservationSummary -> [(DiGraph, RoomIndex)]
+enumGraph numRooms trie = do
+  (startingRoom, g) <- runStateT (f trie) Seq.empty
+  pure (V.fromList (F.toList g), startingRoom)
+  where
+    f :: ObservationSummary -> StateT (Seq (RoomLabel, IntMap RoomIndex)) [] RoomIndex
+    f (Trie.Node label children) = do
+      outs <- mapM f children
+      g <- get
+      msum $
+        -- 既存のノードにマージするパターン
+        [ do guard $ label == label'
+             guard $ and $ IntMap.intersectionWith (==) outs outs'
+             put $ Seq.update idx (label, IntMap.union outs outs') g
+             return idx
+        | (idx, (label', outs')) <- zip [0..] (F.toList g)
+        ] ++
+        -- 新しいノードを作るパターン
+        [ do let idx = Seq.length g
+             guard $ idx < numRooms
+             put $ g Seq.|> (label, outs)
+             return idx
+        ]
 
 -- | 有向グラフ表現の 'Layout' への変換
 toLayout :: (DiGraph, RoomIndex) -> Layout
@@ -126,3 +156,12 @@ _test_toLayout = toLayout _test_fromTrie
 
 _test_writePng :: IO ()
 _test_writePng = writePng "test.png" _test_fromTrie
+
+-- primus の場合の例
+_test_enumGraph :: IO ()
+_test_enumGraph = writePng "test.png" $ head (enumGraph 6 t)
+  where
+    plan = "021320403505044123550520034431312210134541025332505010033554343013423011254052531011533004340304253205132534"
+    result :: [RoomLabel]
+    result = [0,1,0,0,2,0,2,1,1,1,1,1,1,1,1,2,0,0,2,0,0,2,0,0,2,0,2,1,2,0,2,0,2,0,0,2,0,0,2,1,3,3,3,1,0,2,0,1,3,1,0,2,0,0,1,1,1,1,1,3,3,3,3,3,1,3,3,3,1,1,0,0,0,0,2,1,1,1,0,2,0,2,0,0,0,2,0,1,0,1,2,0,2,0,2,0,1,3,1,1,3,1,3,3,3,1,3,3,3]
+    t = Trie.fromObservation plan result

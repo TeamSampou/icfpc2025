@@ -12,7 +12,10 @@ module ObservationSummary
  , unions
  , fromList
  , toList
+ , lookup
  ) where
+
+import Prelude hiding (lookup)
 
 import Control.Monad
 import Data.IntMap.Strict (IntMap)
@@ -95,5 +98,11 @@ toList = f [] []
       | otherwise = do
           (d, node) <- IntMap.toList children
           f (d : ds) (l : ls) node
+
+lookup :: Plan -> Trie a -> Maybe a
+lookup [] (Node l _children) = Just l
+lookup (d : ds) (Node _ children) = do
+  ch <- IntMap.lookup (read [d]) children
+  lookup ds ch
 
 -- ------------------------------------------------------------------------

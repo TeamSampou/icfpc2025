@@ -33,6 +33,7 @@ library
       Client
       Lib
       ObservationSummary
+      Searching
   other-modules:
       Paths_icfpc2025
   hs-source-dirs:

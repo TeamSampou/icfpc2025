@@ -19,7 +19,7 @@ import Base
 type ObservationSummary = Trie RoomLabel
 
 data Trie a = Node !a (IntMap (Trie a))
-  deriving (Show)
+  deriving (Show, Eq)
 
 singleton :: Plan -> [a] -> Trie a
 singleton [] [l] = Node l (IntMap.empty)

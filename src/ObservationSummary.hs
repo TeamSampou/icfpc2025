@@ -10,12 +10,12 @@ module ObservationSummary
 
  -- * Trie
  , Trie (..)
- , singleton
+ , fromObservation
+ , fromObservations
  , union
  , unions
- , fromList
+ , toObservations
  , toList
- , toList'
  , lookup
  , keys
  , mapWithKey
@@ -74,8 +74,8 @@ _test_toDotGraph = do
   pure ()
   where
     dg = toDotGraph c
-    a = fromList $ zip ["000","123","213","333"] [[0,1,2,0],[0,0,1,2],[0,1,1,2],[0,2,0,2]]
-    b = fromList $ zip ["4","5","02","03","04","05","31","32","34","35"] [[0,2],[0,2],[0,1,0],[0,1,2],[0,1,1],[0,1,0],[0,2,1],[0,2,0],[0,2,2],[0,2,1]]
+    a = fromObservations $ zip ["000","123","213","333"] [[0,1,2,0],[0,0,1,2],[0,1,1,2],[0,2,0,2]]
+    b = fromObservations $ zip ["4","5","02","03","04","05","31","32","34","35"] [[0,2],[0,2],[0,1,0],[0,1,2],[0,1,1],[0,1,0],[0,2,1],[0,2,0],[0,2,2],[0,2,1]]
     c = union a b
 
 -- | Plan(のPrefix)で表される部屋のうち、異なる部屋であることが確定している組み合わせを列挙する
@@ -94,7 +94,7 @@ deriveTrivialDisequalities t = Set.map (\(p1,p2) -> (seqToPlan p1, seqToPlan p2)
 
 deriveTrivialDisequalities' :: ObservationSummary -> Set (Seq Door, Seq Door)
 deriveTrivialDisequalities' t = Set.fromList $ do
-  ((p1,l1),(p2,l2)) <- pairs [(planToSeq p, l) | (p, l :: RoomLabel) <- toList' t]
+  ((p1,l1),(p2,l2)) <- pairs [(planToSeq p, l) | (p, l :: RoomLabel) <- toList t]
   guard $ l1 /= l2
   assert (p1 < p2) $ pure (p1, p2)
 
@@ -123,7 +123,7 @@ test_deriveNontrivialDisequalities = [assert (lookup p1 t == lookup p2 t) (p1, p
     result :: [RoomLabel]
     result = [0,3,0,1,2,3,0,1,0,0,1,1,0,1,1,0,1,1,0,0,0,1,3,2,3,0,1,1,0,3,0,0,0,0,1,2,1,2,2,2,1,2,3,2,2,2,1,0,1,0,1,0,1,0,1]
 
-    t = singleton plan result
+    t = fromObservation plan result
 
 -- ------------------------------------------------------------------------
 
@@ -133,10 +133,10 @@ data Trie a = Node !a (IntMap (Trie a))
 instance Functor Trie where
   fmap f (Node l children) = Node (f l) (fmap (fmap f) children)
 
-singleton :: Plan -> [a] -> Trie a
-singleton [] [l] = Node l (IntMap.empty)
-singleton (d : plan') (l : ls) = Node l (IntMap.singleton (read [d]) (singleton plan' ls))
-singleton _ _ = undefined
+fromObservation :: Plan -> [a] -> Trie a
+fromObservation [] [l] = Node l (IntMap.empty)
+fromObservation (d : plan') (l : ls) = Node l (IntMap.singleton (read [d]) (fromObservation plan' ls))
+fromObservation _ _ = undefined
 
 union :: (Eq a, Show a) => Trie a -> Trie a -> Trie a
 union (Node l1 children1) (Node l2 children2)
@@ -146,11 +146,11 @@ union (Node l1 children1) (Node l2 children2)
 unions :: (Eq a, Show a) => [Trie a] -> Trie a
 unions = foldl1' union
 
-fromList :: (Eq a, Show a) => [(Plan, [a])] -> Trie a
-fromList = unions . map (uncurry singleton)
+fromObservations :: (Eq a, Show a) => [(Plan, [a])] -> Trie a
+fromObservations = unions . map (uncurry fromObservation)
 
-toList :: Trie a -> [(Plan, [a])]
-toList = f Seq.empty Seq.empty
+toObservations :: Trie a -> [(Plan, [a])]
+toObservations = f Seq.empty Seq.empty
   where
     f ds ls (Node l children)
       | IntMap.null children = pure (seqToPlan ds, F.toList (ls Seq.|> l))
@@ -158,8 +158,8 @@ toList = f Seq.empty Seq.empty
           (d, node) <- IntMap.toList children
           f (ds Seq.|> d) (ls Seq.|> l) node
 
-toList' :: forall a. Trie a -> [(Plan, a)]
-toList' = f Seq.empty
+toList :: forall a. Trie a -> [(Plan, a)]
+toList = f Seq.empty
   where
     f :: Seq Door -> Trie a -> [(Plan, a)]
     f hist (Node l children) = (seqToPlan hist, l) : concat [f (hist Seq.|> d) ch | (d, ch) <- IntMap.toList children]

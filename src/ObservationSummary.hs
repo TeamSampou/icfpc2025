@@ -21,6 +21,9 @@ type ObservationSummary = Trie RoomLabel
 data Trie a = Node !a (IntMap (Trie a))
   deriving (Show, Eq)
 
+instance Functor Trie where
+  fmap f (Node l children) = Node (f l) (fmap (fmap f) children)
+
 singleton :: Plan -> [a] -> Trie a
 singleton [] [l] = Node l (IntMap.empty)
 singleton (d : plan') (l : ls) = Node l (IntMap.singleton (read [d]) (singleton plan' ls))

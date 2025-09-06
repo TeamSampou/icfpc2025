@@ -3,6 +3,7 @@ module Base
   , RoomLabel
   , RoomIndex
   , Door
+  , Plan
   ) where
 
 type Layout = ([RoomLabel], RoomIndex, [((RoomIndex, Door), (RoomIndex, Door))])
@@ -14,3 +15,4 @@ type RoomIndex = Int
 
 type Door = Int
 
+type Plan = String

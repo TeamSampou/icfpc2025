@@ -50,7 +50,7 @@ toDotGraph t = GraphViz.digraph' $ f [] t
       pure name
 
 writePng :: FilePath -> ObservationSummary -> IO ()
-writePng fname t = GraphViz.writeDotFile fname (toDotGraph t)
+writePng fname t = void $ GraphViz.runGraphviz (toDotGraph t) GraphViz.Png fname
 
 _test_toDotGraph :: IO ()
 _test_toDotGraph = do

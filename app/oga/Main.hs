@@ -71,7 +71,10 @@ fixToZRoom room doors =
 
 solve :: Int -> IO [RoomZ]
 solve limit = do
-    (_,_,zRooms) <- solve' limit [] [] (0,"")
+    (_,fixRooms,zRooms) <- solve' limit [] [] (0,"")
+    putStrLn $ "fixRooms=" ++ show(length fixRooms) ++ ", zRooms=" ++ show(length zRooms)
+    mapM_ print fixRooms
+    mapM_ print zRooms
     return zRooms
 
 
@@ -84,7 +87,7 @@ solve'
 solve' 0       _       _       _       = error "limit reached, abort."
 solve' limit  fixRooms zRooms (_,plan) = do
     putStrLn $ "count " ++ show limit ++ ", fixRooms=" ++ show(length fixRooms) ++ ", zRooms=" ++ show(length zRooms) ++ ", plan=" ++ plan
-    when (limit`div`5==1) $ mapM_ print  fixRooms
+    when (limit`mod`5==1) $ mapM_ print zRooms
     -- とりあえず全部のドアを開ける
     raw@(room,neighbors) <- openAllDoor plan
     -- ドアパターンを既知の部屋を比較して部屋番号を確定する
@@ -105,7 +108,7 @@ solve' limit  fixRooms zRooms (_,plan) = do
 formatAnswer :: [RoomZ] -> Layout
 formatAnswer rooms =
     ( map rzLabel $ sortBy (compare`on`rzIndex) rooms
-    , rzIndex $ head rooms -- まぁ最後に先頭にいれてるはずだから...
+    , 0
     , calcDoorPair rooms
     )
 
@@ -148,6 +151,7 @@ updateFixRooms fixs raw =
 -- | 同じ部屋(==同じラベルでドアパターンも同じ)だったら部屋番号を返す
 isSameRoom :: RoomF -> RoomRaw -> Maybe RoomIndex
 isSameRoom r1 ((label2, _), doors2) =
+    traceShow (r1,label2,doors2,doors1 == (sort $ map f doors2)) $ 
     if label1 == label2 && doors1 == (sort $ map f doors2) then Just (rfIndex r1) else Nothing
     where
         label1 = rfLabel r1

@@ -96,13 +96,13 @@ fromList :: (Eq a, Show a) => [(Plan, [a])] -> Trie a
 fromList = unions . map (uncurry singleton)
 
 toList :: Trie a -> [(Plan, [a])]
-toList = f [] []
+toList = f Seq.empty Seq.empty
   where
     f ds ls (Node l children)
-      | IntMap.null children = pure (concat $ map show $ reverse ds, reverse (l : ls))
+      | IntMap.null children = pure (seqToPlan ds, F.toList (ls Seq.|> l))
       | otherwise = do
           (d, node) <- IntMap.toList children
-          f (d : ds) (l : ls) node
+          f (ds Seq.|> d) (ls Seq.|> l) node
 
 lookup :: Plan -> Trie a -> Maybe a
 lookup [] (Node l _children) = Just l
@@ -111,21 +111,23 @@ lookup (d : ds) (Node _ children) = do
   lookup ds ch
 
 keys :: forall a. Trie a -> [Plan]
-keys = map histToPlan . f Seq.empty
+keys = map seqToPlan . f Seq.empty
   where
-    histToPlan :: Seq Door -> Plan
-    histToPlan = concat . map show . F.toList
-
     f :: Seq Door -> Trie a -> [Seq Door]
     f hist (Node _ children) = hist : concat [f (hist Seq.|> d) ch | (d, ch) <- IntMap.toList children]
 
 mapWithKey :: forall a b. (Plan -> a -> b) -> Trie a -> Trie b
 mapWithKey f = g Seq.empty
   where
-    histToPlan :: Seq Door -> Plan
-    histToPlan = concat . map show . F.toList
-
     g :: Seq Door -> Trie a -> Trie b
-    g hist (Node l children) = Node (f (histToPlan hist) l) (IntMap.mapWithKey (\d ch -> g (hist Seq.|> d) ch) children)
+    g hist (Node l children) = Node (f (seqToPlan hist) l) (IntMap.mapWithKey (\d ch -> g (hist Seq.|> d) ch) children)
+
+-- ------------------------------------------------------------------------
+
+planToSeq :: Plan -> Seq Door
+planToSeq = Seq.fromList . map (\c -> read [c])
+
+seqToPlan :: Seq Door -> Plan
+seqToPlan = concat . map show . F.toList
 
 -- ------------------------------------------------------------------------

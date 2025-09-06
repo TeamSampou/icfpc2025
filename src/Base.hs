@@ -4,6 +4,8 @@ module Base
   , RoomIndex
   , Door
   , Plan
+  , maxPlan
+  , randomWalk
   ) where
 
 import Control.Monad

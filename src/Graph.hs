@@ -64,11 +64,11 @@ toLayout (g, startingRoom) =
   , startingRoom
   , concat
     [ if room1 == room2 then do
-        d <- IntSet.toList (cs Map.! (room1, room2))
+        d <- IntSet.toList $ Map.findWithDefault IntSet.empty (room1, room2) cs
         pure ((room1,d), (room2,d))
       else do
-        let ds1 = cs Map.! (room1, room2)
-            ds2 = cs Map.! (room2, room1)
+        let ds1 = Map.findWithDefault IntSet.empty (room1, room2) cs
+            ds2 = Map.findWithDefault IntSet.empty (room2, room1) cs
         unless (IntSet.size ds1 == IntSet.size ds2) $ error "not symmetric"
         zip (map (\d -> (room1, d)) (IntSet.toList ds1)) (map (\d -> (room2, d)) (IntSet.toList ds2))
     | room1 <- [0..numRooms-1]

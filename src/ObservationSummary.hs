@@ -4,6 +4,9 @@ module ObservationSummary
    ObservationSummary
  , toDotGraph
  , writePng
+ , deriveDisequalities
+ , deriveNontrivialDisequalities
+ , deriveTrivialDisequalities
 
  -- * Trie
  , Trie (..)
@@ -20,6 +23,7 @@ module ObservationSummary
 
 import Prelude hiding (lookup)
 
+import Control.Exception (assert)
 import Control.Monad
 import qualified Data.Foldable as F
 import Data.IntMap.Strict (IntMap)
@@ -27,6 +31,8 @@ import qualified Data.IntMap.Strict as IntMap
 import Data.List (foldl1')
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -71,6 +77,53 @@ _test_toDotGraph = do
     a = fromList $ zip ["000","123","213","333"] [[0,1,2,0],[0,0,1,2],[0,1,1,2],[0,2,0,2]]
     b = fromList $ zip ["4","5","02","03","04","05","31","32","34","35"] [[0,2],[0,2],[0,1,0],[0,1,2],[0,1,1],[0,1,0],[0,2,1],[0,2,0],[0,2,2],[0,2,1]]
     c = union a b
+
+-- | Plan(のPrefix)で表される部屋のうち、異なる部屋であることが確定している組み合わせを列挙する
+deriveDisequalities :: ObservationSummary -> Set (Plan, Plan)
+deriveDisequalities t = Set.map (\(p1,p2) -> (seqToPlan p1, seqToPlan p2)) $ saturateDisequalities (deriveTrivialDisequalities' t)
+
+-- | 'deriveDisequalities' と同様だが、ラベルの違いだけで区別できるような部屋の組は除外する
+deriveNontrivialDisequalities :: ObservationSummary -> Set (Plan, Plan)
+deriveNontrivialDisequalities t = Set.map (\(p1,p2) -> (seqToPlan p1, seqToPlan p2)) $ saturateDisequalities xs `Set.difference` xs
+  where
+    xs = deriveTrivialDisequalities' t
+
+-- | ラベルの違いだけで区別できるような部屋の組
+deriveTrivialDisequalities :: ObservationSummary -> Set (Plan, Plan)
+deriveTrivialDisequalities t = Set.map (\(p1,p2) -> (seqToPlan p1, seqToPlan p2)) $ deriveTrivialDisequalities' t
+
+deriveTrivialDisequalities' :: ObservationSummary -> Set (Seq Door, Seq Door)
+deriveTrivialDisequalities' t = Set.fromList $ do
+  ((p1,l1),(p2,l2)) <- pairs [(planToSeq p, l) | (p, l :: RoomLabel) <- toList' t]
+  guard $ l1 /= l2
+  assert (p1 < p2) $ pure (p1, p2)
+
+saturateDisequalities :: Set (Seq Door, Seq Door) -> Set (Seq Door, Seq Door)
+saturateDisequalities xs = loop xs xs
+  where
+    loop :: Set (Seq Door, Seq Door) -> Set (Seq Door, Seq Door) -> Set (Seq Door, Seq Door)
+    loop current added
+      | Set.null new = current
+      | otherwise = loop (current `Set.union` new) new
+      where
+        new = new' `Set.difference` current
+        new' = Set.fromList $ do
+          (p1, p2) <- Set.toList added
+          case (p1, p2) of
+            (p1' Seq.:|> d1, p2' Seq.:|> d2) | d1 == d2 -> assert (p1' < p2') [(p1', p2')] -- 子が異なるなら同じドアを通って子に来ることになった親も異なる
+            _ -> []
+
+test_deriveNontrivialDisequalities :: [(Plan, Plan, Maybe RoomLabel)]
+test_deriveNontrivialDisequalities = [assert (lookup p1 t == lookup p2 t) (p1, p2, lookup p1 t) | (p1,p2) <- Set.toList deqs]
+  where
+    deqs = deriveNontrivialDisequalities t
+
+    plan = "231025153214112435435242513423043543011400411314240201"
+
+    result :: [RoomLabel]
+    result = [0,3,0,1,2,3,0,1,0,0,1,1,0,1,1,0,1,1,0,0,0,1,3,2,3,0,1,1,0,3,0,0,0,0,1,2,1,2,2,2,1,2,3,2,2,2,1,0,1,0,1,0,1,0,1]
+
+    t = singleton plan result
 
 -- ------------------------------------------------------------------------
 
@@ -130,6 +183,10 @@ mapWithKey f = g Seq.empty
     g hist (Node l children) = Node (f (seqToPlan hist) l) (IntMap.mapWithKey (\d ch -> g (hist Seq.|> d) ch) children)
 
 -- ------------------------------------------------------------------------
+
+pairs :: [a] -> [(a,a)]
+pairs [] = []
+pairs (x:xs) = [(x,y) | y <- xs] ++ pairs xs
 
 planToSeq :: Plan -> Seq Door
 planToSeq = Seq.fromList . map (\c -> read [c])

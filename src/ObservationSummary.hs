@@ -12,6 +12,7 @@ module ObservationSummary
  , unions
  , fromList
  , toList
+ , toList'
  , lookup
  , keys
  , mapWithKey
@@ -103,6 +104,12 @@ toList = f Seq.empty Seq.empty
       | otherwise = do
           (d, node) <- IntMap.toList children
           f (ds Seq.|> d) (ls Seq.|> l) node
+
+toList' :: forall a. Trie a -> [(Plan, a)]
+toList' = f Seq.empty
+  where
+    f :: Seq Door -> Trie a -> [(Plan, a)]
+    f hist (Node l children) = (seqToPlan hist, l) : concat [f (hist Seq.|> d) ch | (d, ch) <- IntMap.toList children]
 
 lookup :: Plan -> Trie a -> Maybe a
 lookup [] (Node l _children) = Just l

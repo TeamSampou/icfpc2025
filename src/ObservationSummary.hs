@@ -5,6 +5,7 @@ module ObservationSummary
  , union
  , unions
  , fromList
+ , toList
  ) where
 
 import Client (RoomLabel, Door)
@@ -35,3 +36,12 @@ unions = foldl1' union
 
 fromList :: (Eq a, Show a) => [(Plan, [a])] -> Trie a
 fromList = unions . map (uncurry singleton)
+
+toList :: Trie a -> [(Plan, [a])]
+toList = f [] []
+  where
+    f ds ls (Node l children)
+      | IntMap.null children = pure (concat $ map show $ reverse ds, reverse (l : ls))
+      | otherwise = do
+          (d, node) <- IntMap.toList children
+          f (d : ds) (l : ls) node

@@ -29,6 +29,7 @@ dependencies:
 - bytestring
 - time
 - array
+- containers
 - mtl
 - text
 - directory
@@ -64,11 +65,9 @@ ghc-options:
 library:
   dependencies:
   - aeson
-  - containers
   - dotenv
   - http-conduit
   - split
-  ## - aeson
   ## - constraints
   ## - extra
   ## - fgl

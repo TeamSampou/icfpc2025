@@ -55,6 +55,7 @@ library
     , dotenv
     , exceptions
     , filepath
+    , graphviz
     , http-conduit
     , mtl
     , process

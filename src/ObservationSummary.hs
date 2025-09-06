@@ -1,5 +1,11 @@
 module ObservationSummary
- ( ObservationSummary
+ (
+ -- * Observation summary
+   ObservationSummary
+ , toDotGraph
+ , writePng
+
+ -- * Trie
  , Trie (..)
  , singleton
  , union
@@ -8,15 +14,56 @@ module ObservationSummary
  , toList
  ) where
 
-import Client (RoomLabel, Door)
+import Control.Monad
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.List (foldl1')
+import Data.Text (Text)
+import qualified Data.Text as T
+
+import qualified Data.GraphViz.Attributes as GraphViz
+import qualified Data.GraphViz.Commands as GraphViz
+import qualified Data.GraphViz.Commands.IO as GraphViz
+import qualified Data.GraphViz.Types.Generalised as GraphViz
+import qualified Data.GraphViz.Types.Monadic as GraphViz
 
 import Base
 
 
+-- ------------------------------------------------------------------------
+
 type ObservationSummary = Trie RoomLabel
+
+toDotGraph :: ObservationSummary -> GraphViz.DotGraph Text
+toDotGraph t = GraphViz.digraph' $ f [] t
+  where
+    pathToNodeName :: [Door] -> Text
+    pathToNodeName path = T.pack $ "node" ++ concatMap show (reverse path)
+
+    f :: [Door] -> ObservationSummary -> GraphViz.DotM Text Text
+    f path (Node l children) = do
+      let name = pathToNodeName path
+      GraphViz.node name [GraphViz.toLabel (show l)]
+      forM_ (IntMap.toList children) $ \(d, ch) -> do
+        name' <- f (d : path) ch
+        GraphViz.edge name name' [GraphViz.toLabel (show d)]
+      pure name
+
+writePng :: FilePath -> ObservationSummary -> IO ()
+writePng fname t = void $ GraphViz.runGraphviz (toDotGraph t) GraphViz.Png fname
+
+_test_toDotGraph :: IO ()
+_test_toDotGraph = do
+  _ <- GraphViz.runGraphviz dg GraphViz.Png "test.png"
+  GraphViz.writeDotFile "test.dot" dg
+  pure ()
+  where
+    dg = toDotGraph c
+    a = fromList $ zip ["000","123","213","333"] [[0,1,2,0],[0,0,1,2],[0,1,1,2],[0,2,0,2]]
+    b = fromList $ zip ["4","5","02","03","04","05","31","32","34","35"] [[0,2],[0,2],[0,1,0],[0,1,2],[0,1,1],[0,1,0],[0,2,1],[0,2,0],[0,2,2],[0,2,1]]
+    c = union a b
+
+-- ------------------------------------------------------------------------
 
 data Trie a = Node !a (IntMap (Trie a))
   deriving (Show, Eq)
@@ -48,3 +95,5 @@ toList = f [] []
       | otherwise = do
           (d, node) <- IntMap.toList children
           f (d : ds) (l : ls) node
+
+-- ------------------------------------------------------------------------

@@ -29,6 +29,7 @@ flag doctests
 
 library
   exposed-modules:
+      Base
       Client
       Lib
   other-modules:

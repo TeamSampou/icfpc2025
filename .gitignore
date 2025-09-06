@@ -6,3 +6,4 @@ core
 *.hi
 *.o
 *~
+.env

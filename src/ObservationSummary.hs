@@ -14,6 +14,7 @@ module ObservationSummary
  , toList
  , lookup
  , keys
+ , mapWithKey
  ) where
 
 import Prelude hiding (lookup)
@@ -110,9 +111,21 @@ lookup (d : ds) (Node _ children) = do
   lookup ds ch
 
 keys :: forall a. Trie a -> [Plan]
-keys = map (concat . map show . F.toList) . f Seq.empty
+keys = map histToPlan . f Seq.empty
   where
+    histToPlan :: Seq Door -> Plan
+    histToPlan = concat . map show . F.toList
+
     f :: Seq Door -> Trie a -> [Seq Door]
     f hist (Node _ children) = hist : concat [f (hist Seq.|> d) ch | (d, ch) <- IntMap.toList children]
+
+mapWithKey :: forall a b. (Plan -> a -> b) -> Trie a -> Trie b
+mapWithKey f = g Seq.empty
+  where
+    histToPlan :: Seq Door -> Plan
+    histToPlan = concat . map show . F.toList
+
+    g :: Seq Door -> Trie a -> Trie b
+    g hist (Node l children) = Node (f (histToPlan hist) l) (IntMap.mapWithKey (\d ch -> g (hist Seq.|> d) ch) children)
 
 -- ------------------------------------------------------------------------

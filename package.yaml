@@ -68,6 +68,7 @@ library:
   - dotenv
   - http-conduit
   - split
+  - vector
   ## - constraints
   ## - extra
   ## - fgl

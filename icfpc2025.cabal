@@ -31,6 +31,7 @@ library
   exposed-modules:
       Base
       Client
+      Graph
       Lib
       ObservationSummary
   other-modules:
@@ -61,6 +62,7 @@ library
     , stm
     , text
     , time
+    , vector
   default-language: GHC2024
 
 executable add-entry

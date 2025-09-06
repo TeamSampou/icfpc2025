@@ -68,6 +68,8 @@ library:
   - dotenv
   - graphviz
   - http-conduit
+  - mwc-random
+  - primitive
   - split
   - vector
   ## - constraints

@@ -58,6 +58,8 @@ library
     , graphviz
     , http-conduit
     , mtl
+    , mwc-random
+    , primitive
     , process
     , split
     , stm

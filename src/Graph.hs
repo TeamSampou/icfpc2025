@@ -2,6 +2,7 @@ module Graph
   ( DiGraph
   , fromTrie
   , enumGraph
+  , fromLayout
   , toLayout
   , toDotGraph
   , writePng
@@ -11,11 +12,12 @@ import Control.Exception (assert)
 import Control.Monad
 import Control.Monad.State
 import qualified Data.Foldable as F
+import Data.Function (on)
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-import Data.List (intercalate)
+import Data.List (groupBy, intercalate, nubBy, sort)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Sequence (Seq)
@@ -86,6 +88,15 @@ enumGraph numRooms trie = do
              put $ g Seq.|> (label, outs)
              return idx
         ]
+
+fromLayout :: Layout -> (DiGraph, RoomIndex)
+fromLayout (labels, startingRoom, ds) = (V.fromList m, startingRoom)
+  where
+    m :: [(RoomLabel, IntMap RoomIndex)]
+    m = [(label, IntMap.fromList(zip[0..5](map snd doors)) ) | (label, doors) <-zip labels doorss]
+
+    doorss :: [[((RoomIndex, Door), RoomIndex)]]
+    doorss = groupBy((==)`on`fst.fst) $ nubBy((==)`on`fst) $ sort $ concat[[((r1,d1),r2), ((r2,d2),r1)] | ((r1,d1),(r2,d2)) <-ds]
 
 -- | 有向グラフ表現の 'Layout' への変換
 toLayout :: (DiGraph, RoomIndex) -> Layout

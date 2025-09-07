@@ -50,19 +50,21 @@ type DiGraph = Vector (RoomLabel, IntMap RoomIndex)
 --
 -- 実装効率悪そう
 fromTrie :: Int -> Trie (RoomLabel, RoomIndex) -> (DiGraph, RoomIndex)
-fromTrie numRooms trie@(Trie.Node (_, startingRoom) _) = (V.generate numRooms g, startingRoom)
+fromTrie numRooms trie@(Trie.Node (_, startingRoom) _ _) = (V.generate numRooms g, startingRoom)
   where
     g :: Int -> (RoomLabel, IntMap RoomIndex)
-    g i = assert (i == roomId) $ (label, fmap (\(Trie.Node (label', _) _) -> label') children)
+    g i = assert (i == roomId) $ (label, fmap (\(Trie.Node (label', _) _ _) -> label') childrenD)
       where
-        Trie.Node (label, roomId) children = merged IntMap.! i
+        Trie.Node (label, roomId) childrenD _ = merged IntMap.! i
 
     -- RoomIndex をキーにして情報を集約したもの (実装効率悪そう)
     merged :: IntMap (Trie (RoomLabel, RoomIndex))
     merged = f trie
       where
         f :: Trie (RoomLabel, RoomIndex) -> IntMap (Trie (RoomLabel, RoomIndex))
-        f t@(Trie.Node (_, roomId) children) = IntMap.unionsWith Trie.union $ IntMap.singleton roomId t : map f (IntMap.elems children)
+        f t@(Trie.Node (_, roomId) childrenD childrenL)
+          | not (IntMap.null childrenL) = error "label altering is not supported yet"
+          | otherwise = IntMap.unionsWith Trie.union $ IntMap.singleton roomId t : map f (IntMap.elems childrenD)
 
 -- | 与えられた部屋数と 'ObservationSummary' から、それに整合的なグラフ構造を列挙する
 enumGraph :: Int -> ObservationSummary -> [(DiGraph, RoomIndex)]
@@ -71,8 +73,9 @@ enumGraph numRooms trie = do
   pure (V.fromList (F.toList g), startingRoom)
   where
     f :: ObservationSummary -> StateT (Seq (RoomLabel, IntMap RoomIndex)) [] RoomIndex
-    f (Trie.Node label children) = do
-      outs <- mapM f children
+    f (Trie.Node label childrenD childrenL) = do
+      unless (IntMap.null childrenL) $ error "label altering is not supported yet"
+      outs <- mapM f childrenD
       g <- get
       msum $
         -- 既存のノードにマージするパターン

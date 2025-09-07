@@ -73,6 +73,68 @@ step p es ps =
       move    = [ let m = norm f in if m > t then (t/m) *^ f else f | f <- force ]
   in zipWith (+^) ps move
 
+-- ---------------------------------------------------------------
+--  線の張力で部屋位置をちょい動かす後処理（安全な小ステップ）
+--    rad    : 六角の半径
+--    iters  : 反復回数（例: 60〜150）
+--    stepSz : 1回あたりの最大移動量（例: 0.15〜0.35）
+-- ---------------------------------------------------------------
+-- ---------------------------------------------------------------
+--  線の張力で部屋位置をちょい動かす後処理（安全な小ステップ）
+-- ---------------------------------------------------------------
+relaxByEdges
+  :: Double          -- ^ rad
+  -> Int             -- ^ iters
+  -> Double          -- ^ stepSz
+  -> [((Int,Door),(Int,Door))]
+  -> [V2]
+  -> [V2]
+relaxByEdges rad iters stepSz edges0 pos0 = go iters pos0
+  where
+    n        = length pos0
+    minSep'  = 2*rad + 0.15*rad
+    kTension = 1.0
+    kRepE    = 0.9
+    kGrav    = 0.008
+
+    clamp v =
+      let m = norm v
+      in if m <= stepSz || m <= 1e-12 then v else (stepSz/m) *^ v
+
+    go 0 ps = ps
+    go k ps =
+      let -- 1) 線の張力（ドア位置を縮める）。各エッジ→2要素のリスト→concatで平坦化
+          tensionForces = concat
+            [ let p1 = doorPoint rad ci di
+                  p2 = doorPoint rad cj dj
+                  f  = kTension *^ (p2 -^ p1)
+              in [(ri, f) , (rj, (-1) *^ f)]
+            | ((ri,di),(rj,dj)) <- edges0
+            , let ci = ps !! ri
+            , let cj = ps !! rj
+            ]
+
+          -- 2) 近距離の反発（最小分離を死守）
+          repulsions = concat
+            [ let d    = (ps !! i) -^ (ps !! j)
+                  dist = norm d
+                  need = minSep' - dist
+                  f    = if need > 0 then (kRepE * need) *^ unit d else (0,0)
+              in [(i, f), (j, (-1) *^ f)]
+            | i <- [0..n-1], j <- [i+1..n-1]
+            ]
+
+          -- 3) ごく弱い重力で中心に寄せる
+          ctr   = let (sx,sy) = foldl' (+^) (0,0) ps
+                      m = fromIntegral (max 1 n)
+                  in (sx/m, sy/m)
+          gravs = [ (i, kGrav *^ (ctr -^ (ps !! i))) | i <- [0..n-1] ]
+
+          allF      = tensionForces ++ repulsions ++ gravs
+          forceAt i = foldl' (+^) (0,0) [f | (j,f) <- allF, j==i]
+          ps'       = [ (ps !! i) +^ clamp (forceAt i) | i <- [0..n-1] ]
+      in go (k-1) ps'
+
 runLayout :: ForceParams -> [(Int,Int)] -> [V2] -> [V2]
 runLayout p es p0 = go (steps p) (temp0 p) p0
   where
@@ -162,9 +224,10 @@ layoutToSVG initRadius rad margin iters (labels, _start, edges) =
       p0      = initialOnCircle n initRadius
       ers     = [ (ri,rj) | ((ri,_),(rj,_)) <- edges, ri /= rj ]
       placed0 = runLayout p ers p0
+      placed1 = relaxByEdges rad 100 0.25 edges placed0
 
       scaleTarget = idealLen * 3.6
-      (centers, w0, h0) = scaleAndPad margin scaleTarget placed0
+      (centers, w0, h0) = scaleAndPad margin scaleTarget placed1
       w = w0 + margin; h = h0 + margin
       centersI = zip [0..] centers
 

@@ -68,6 +68,7 @@ library
     , text
     , time
     , vector
+    , z3
   default-language: GHC2024
 
 executable add-entry

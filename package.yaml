@@ -72,6 +72,7 @@ library:
   - primitive
   - split
   - vector
+  - z3
   ## - constraints
   ## - extra
   ## - fgl

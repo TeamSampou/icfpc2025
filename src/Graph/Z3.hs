@@ -11,7 +11,8 @@ import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-import Data.List (groupBy, intercalate, nubBy, sort)
+import Data.IORef
+import Data.List (elemIndex, groupBy, intercalate, nubBy, sort)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromJust)
@@ -80,6 +81,23 @@ findGraph' numRooms t@(Trie.Node startingRoomLabel _ _) = do
   -- symmetry breaking
   forM_ [length fixedLabels .. numRooms - 2] $ \i -> do
     Z3.solverAssertCnstr =<< Z3.mkBvule (startingLabels !! i) (startingLabels !! (i+1))
+
+  -- Trieをトラバースして、各ラベルについて最初に見つかった頂点は、ラベルを固定した部屋だとしても一般性を失わない
+  do seenLabelsRef <- liftIO $ newIORef (IntSet.singleton startingRoomLabel)
+     let preprocess :: Z3.AST -> Trie.ObservationSummary -> z3 ()
+         preprocess currentRoom (Trie.Node label childrenD _childrenL) = do
+           seenLabels <- liftIO $ readIORef seenLabelsRef
+           unless (label `IntSet.member` seenLabels) $ do
+             case elemIndex label fixedLabels of
+               Nothing -> pure ()
+               Just i -> do
+                 iExpr <- Z3.mkInt i sRoom
+                 Z3.solverAssertCnstr =<< Z3.mkEq currentRoom iExpr
+             liftIO $ writeIORef seenLabelsRef (IntSet.insert label seenLabels)
+           forM_ (IntMap.toList childrenD) $ \(d, ch) -> do
+             newRoom <- Z3.mkApp (doorFuncs !! d) [currentRoom]
+             preprocess newRoom ch
+     preprocess startingRoom t
 
   -- Finite-domain sort は Array の index に使うとうまく機能しないので、代わりに場合分けで書く
   let select :: [Z3.AST] -> Z3.AST -> z3 Z3.AST

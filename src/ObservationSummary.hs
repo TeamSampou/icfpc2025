@@ -50,18 +50,21 @@ import Base
 type ObservationSummary = Trie RoomLabel
 
 toDotGraph :: ObservationSummary -> GraphViz.DotGraph Text
-toDotGraph t = GraphViz.digraph' $ f [] t
+toDotGraph t = GraphViz.digraph' $ f Seq.empty t
   where
-    pathToNodeName :: [Door] -> Text
-    pathToNodeName path = T.pack $ "node" ++ concatMap show (reverse path)
+    histToNodeName :: Seq Action -> Text
+    histToNodeName hist = T.pack $ "node" ++ seqToPlan hist
 
-    f :: [Door] -> ObservationSummary -> GraphViz.DotM Text Text
-    f path (Node l children) = do
-      let name = pathToNodeName path
-      GraphViz.node name [GraphViz.toLabel (show l)]
-      forM_ (IntMap.toList children) $ \(d, ch) -> do
-        name' <- f (d : path) ch
+    f :: Seq Action -> ObservationSummary -> GraphViz.DotM Text Text
+    f hist (Node label childrenD childrenL) = do
+      let name = histToNodeName hist
+      GraphViz.node name [GraphViz.toLabel (show label)]
+      forM_ (IntMap.toList childrenD) $ \(d, ch) -> do
+        name' <- f (hist Seq.|> PassDoor d) ch
         GraphViz.edge name name' [GraphViz.toLabel (show d)]
+      forM_ (IntMap.toList childrenL) $ \(l, ch) -> do
+        name' <- f (hist Seq.|> AlterLabel l) ch
+        GraphViz.edge name name' [GraphViz.toLabel (show l), GraphViz.style GraphViz.dotted]
       pure name
 
 writePng :: FilePath -> ObservationSummary -> IO ()
@@ -92,16 +95,22 @@ deriveNontrivialDisequalities t = Set.map (\(p1,p2) -> (seqToPlan p1, seqToPlan 
 deriveTrivialDisequalities :: ObservationSummary -> Set (Plan, Plan)
 deriveTrivialDisequalities t = Set.map (\(p1,p2) -> (seqToPlan p1, seqToPlan p2)) $ deriveTrivialDisequalities' t
 
-deriveTrivialDisequalities' :: ObservationSummary -> Set (Seq Door, Seq Door)
+deriveTrivialDisequalities' :: ObservationSummary -> Set (Seq Action, Seq Action)
 deriveTrivialDisequalities' t = Set.fromList $ do
-  ((p1,l1),(p2,l2)) <- pairs [(planToSeq p, l) | (p, l :: RoomLabel) <- toList t]
+  ((p1,l1),(p2,l2)) <- pairs [check s $ (s, l) | (p, l :: RoomLabel) <- toList t, let s = planToSeq p]
   guard $ l1 /= l2
   assert (p1 < p2) $ pure (p1, p2)
+  where
+    check s x
+      | any isAlterLabel s = error "label altering is not supported yet"
+      | otherwise = x
+    isAlterLabel (AlterLabel _) = True
+    isAlterLabel (PassDoor _) = False
 
-saturateDisequalities :: Set (Seq Door, Seq Door) -> Set (Seq Door, Seq Door)
+saturateDisequalities :: Set (Seq Action, Seq Action) -> Set (Seq Action, Seq Action)
 saturateDisequalities xs = loop xs xs
   where
-    loop :: Set (Seq Door, Seq Door) -> Set (Seq Door, Seq Door) -> Set (Seq Door, Seq Door)
+    loop :: Set (Seq Action, Seq Action) -> Set (Seq Action, Seq Action) -> Set (Seq Action, Seq Action)
     loop current added
       | Set.null added = current
       | otherwise = loop (current `Set.union` new) (new `Set.difference` current)
@@ -109,7 +118,7 @@ saturateDisequalities xs = loop xs xs
         new = Set.fromList $ do
           (p1, p2) <- Set.toList added
           case (p1, p2) of
-            (p1' Seq.:|> d1, p2' Seq.:|> d2) | d1 == d2 ->
+            (p1' Seq.:|> PassDoor d1, p2' Seq.:|> PassDoor d2) | d1 == d2 ->
               -- 子が異なるなら同じドアを通って子に来ることになった親も異なる
               pure $ if (p1' < p2') then (p1', p2') else (p2', p1')
             _ -> []
@@ -128,21 +137,30 @@ test_deriveNontrivialDisequalities = [assert (lookup p1 t == lookup p2 t) (p1, p
 
 -- ------------------------------------------------------------------------
 
-data Trie a = Node !a (IntMap (Trie a))
+-- | 観測結果等をTrie木にまとめたもの
+--
+-- * 1つ目のIntMapは、ドアを開けた時の続き (キーはDoor)
+--
+-- * 2つ目のIntMapは、ラベルを書き換えた時の続き (キーはRoomLabel)
+data Trie a = Node !a (IntMap (Trie a)) (IntMap (Trie a))
   deriving (Show, Eq)
 
 instance Functor Trie where
-  fmap f (Node l children) = Node (f l) (fmap (fmap f) children)
+  fmap f (Node l childrenD childrenL) = Node (f l) (fmap (fmap f) childrenD) (fmap (fmap f) childrenL)
 
 fromObservation :: Plan -> [a] -> Trie a
-fromObservation [] [l] = Node l (IntMap.empty)
-fromObservation (d : plan') (l : ls) = Node l (IntMap.singleton (read [d]) (fromObservation plan' ls))
-fromObservation _ _ = undefined
+fromObservation plan result = fromObservation' (parsePlan plan) result
+
+fromObservation' :: ParsedPlan -> [a] -> Trie a
+fromObservation' [] [l] = Node l IntMap.empty IntMap.empty
+fromObservation' (PassDoor d : plan') (x : xs) = Node x (IntMap.singleton d (fromObservation' plan' xs)) IntMap.empty
+fromObservation' (AlterLabel l : plan') (x : xs) = Node x IntMap.empty (IntMap.singleton l (fromObservation' plan' xs))
+fromObservation' _ _ = undefined
 
 union :: (Eq a, Show a) => Trie a -> Trie a -> Trie a
-union (Node l1 children1) (Node l2 children2)
+union (Node l1 childrenD1 childrenL1) (Node l2 childrenD2 childrenL2)
   | l1 /= l2 = error ("label mismatch: " ++ show l1 ++ " /= " ++ show l2)
-  | otherwise = Node l1 $ IntMap.unionWith union children1 children2
+  | otherwise = Node l1 (IntMap.unionWith union childrenD1 childrenD2) (IntMap.unionWith union childrenL1 childrenL2)
 
 unions :: (Eq a, Show a) => [Trie a] -> Trie a
 unions = foldl1' union
@@ -153,35 +171,53 @@ fromObservations = unions . map (uncurry fromObservation)
 toObservations :: Trie a -> [(Plan, [a])]
 toObservations = f Seq.empty Seq.empty
   where
-    f ds ls (Node l children)
-      | IntMap.null children = pure (seqToPlan ds, F.toList (ls Seq.|> l))
-      | otherwise = do
-          (d, node) <- IntMap.toList children
-          f (ds Seq.|> d) (ls Seq.|> l) node
+    f hist ls (Node label childrenD childrenL)
+      | IntMap.null childrenD && IntMap.null childrenL = pure (seqToPlan hist, F.toList (ls Seq.|> label))
+      | otherwise = msum
+          [ do (d, node) <- IntMap.toList childrenD
+               f (hist Seq.|> PassDoor d) (ls Seq.|> label) node
+          , do (l, node) <- IntMap.toList childrenL
+               f (hist Seq.|> AlterLabel l) (ls Seq.|> label) node
+          ]
 
 toList :: forall a. Trie a -> [(Plan, a)]
 toList = f Seq.empty
   where
-    f :: Seq Door -> Trie a -> [(Plan, a)]
-    f hist (Node l children) = (seqToPlan hist, l) : concat [f (hist Seq.|> d) ch | (d, ch) <- IntMap.toList children]
+    f :: Seq Action -> Trie a -> [(Plan, a)]
+    f hist (Node label childrenD childrenL) =
+      (seqToPlan hist, label) :
+      concat [f (hist Seq.|> PassDoor d) ch | (d, ch) <- IntMap.toList childrenD] ++
+      concat [f (hist Seq.|> AlterLabel l) ch | (l, ch) <- IntMap.toList childrenL]
 
 lookup :: Plan -> Trie a -> Maybe a
-lookup [] (Node l _children) = Just l
-lookup (d : ds) (Node _ children) = do
-  ch <- IntMap.lookup (read [d]) children
-  lookup ds ch
+lookup plan t = lookup' (parsePlan plan) t
+
+lookup' :: ParsedPlan -> Trie a -> Maybe a
+lookup' [] (Node l _childrenD _childrenL) = Just l
+lookup' (PassDoor d : ds) (Node _ childrenD _childrenL) = do
+  ch <- IntMap.lookup d childrenD
+  lookup' ds ch
+lookup' (AlterLabel l : ds) (Node _ _childrenD childrenL) = do
+  ch <- IntMap.lookup l childrenL
+  lookup' ds ch
 
 keys :: forall a. Trie a -> [Plan]
 keys = map seqToPlan . f Seq.empty
   where
-    f :: Seq Door -> Trie a -> [Seq Door]
-    f hist (Node _ children) = hist : concat [f (hist Seq.|> d) ch | (d, ch) <- IntMap.toList children]
+    f :: Seq Action -> Trie a -> [Seq Action]
+    f hist (Node _ childrenD childrenL) =
+      hist :
+      concat [f (hist Seq.|> PassDoor d) ch | (d, ch) <- IntMap.toList childrenD] ++
+      concat [f (hist Seq.|> AlterLabel l) ch | (l, ch) <- IntMap.toList childrenL]
 
 mapWithKey :: forall a b. (Plan -> a -> b) -> Trie a -> Trie b
 mapWithKey f = g Seq.empty
   where
-    g :: Seq Door -> Trie a -> Trie b
-    g hist (Node l children) = Node (f (seqToPlan hist) l) (IntMap.mapWithKey (\d ch -> g (hist Seq.|> d) ch) children)
+    g :: Seq Action -> Trie a -> Trie b
+    g hist (Node label childrenD childrenL) =
+      Node (f (seqToPlan hist) label)
+        (IntMap.mapWithKey (\d ch -> g (hist Seq.|> PassDoor d) ch) childrenD)
+        (IntMap.mapWithKey (\l ch -> g (hist Seq.|> AlterLabel l) ch) childrenL)
 
 -- ------------------------------------------------------------------------
 
@@ -189,10 +225,10 @@ pairs :: [a] -> [(a,a)]
 pairs [] = []
 pairs (x:xs) = [(x,y) | y <- xs] ++ pairs xs
 
-planToSeq :: Plan -> Seq Door
-planToSeq = Seq.fromList . map (\c -> read [c])
+planToSeq :: Plan -> Seq Action
+planToSeq = Seq.fromList . parsePlan
 
-seqToPlan :: Seq Door -> Plan
-seqToPlan = concat . map show . F.toList
+seqToPlan :: Seq Action -> Plan
+seqToPlan = renderPlan . F.toList
 
 -- ------------------------------------------------------------------------

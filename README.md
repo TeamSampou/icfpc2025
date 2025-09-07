@@ -42,6 +42,8 @@ True
 ```
 
 ```
+ghci> :m +Control.Monad
+ghci> :m +System.Random.MWC
 ghci> initClient
 ghci> select "primus"
 ghci> plan <- (withSystemRandom $ \gen -> randomWalk gen (maxPlan 6) :: IO Plan)  -- This '6' means a number of doors which any room has.

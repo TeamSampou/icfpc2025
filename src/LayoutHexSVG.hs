@@ -377,8 +377,8 @@ scaleAndPad pad scaleTarget ps =
 -- API
 --------------------------------------------------------------------------------
 
-layoutToSVGFile :: Layout -> FilePath -> IO ()
-layoutToSVGFile layout path = do
+layoutToSVGFile :: FilePath -> Layout -> IO ()
+layoutToSVGFile path layout = do
   let rad = 36
   let svg = layoutToSVG (6*rad) rad 140 420 layout
   writeFile path svg

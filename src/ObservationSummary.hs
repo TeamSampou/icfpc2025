@@ -110,7 +110,9 @@ saturateDisequalities xs = loop xs xs
         new' = Set.fromList $ do
           (p1, p2) <- Set.toList added
           case (p1, p2) of
-            (p1' Seq.:|> d1, p2' Seq.:|> d2) | d1 == d2 -> assert (p1' < p2') [(p1', p2')] -- 子が異なるなら同じドアを通って子に来ることになった親も異なる
+            (p1' Seq.:|> d1, p2' Seq.:|> d2) | d1 == d2 ->
+              -- 子が異なるなら同じドアを通って子に来ることになった親も異なる
+              pure $ if (p1' < p2') then (p1', p2') else (p2', p1')
             _ -> []
 
 test_deriveNontrivialDisequalities :: [(Plan, Plan, Maybe RoomLabel)]

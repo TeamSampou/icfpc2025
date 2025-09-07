@@ -33,7 +33,7 @@ findGraph :: Int -> Trie.ObservationSummary -> IO (Maybe (Graph.DiGraph, RoomInd
 findGraph numRooms t = Z3.evalZ3 $ findGraph' numRooms t
 
 findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> Trie.ObservationSummary -> z3 (Maybe (Graph.DiGraph, RoomIndex))
-findGraph' numRooms t = do
+findGraph' numRooms t@(Trie.Node startingRoomLabel _ _) = do
   symRoom <- Z3.mkStringSymbol "Room"
   sRoom <- Z3.mkFiniteDomainSort symRoom (fromIntegral numRooms)
   rooms <- forM [0..numRooms-1] $ \i -> Z3.mkInt i sRoom
@@ -44,9 +44,13 @@ findGraph' numRooms t = do
     Z3.mkFuncDecl sym [sRoom] sRoom
 
   sLabel <- Z3.mkBvSort 2
+  let fixedLabels = startingRoomLabel : IntSet.toList (IntSet.delete startingRoomLabel (Trie.collectUnmodifiedLabels t))
   startingLabels <- forM [0..numRooms-1] $ \i -> do
-    sym <- Z3.mkStringSymbol $ "starting_label_" ++ show i
-    Z3.mkVar sym sLabel
+    if i < length fixedLabels then
+      Z3.mkInt (fixedLabels !! i) sLabel
+    else do
+      sym <- Z3.mkStringSymbol $ "starting_label_" ++ show i
+      Z3.mkVar sym sLabel
 
 
   -- Finite-domain sort は Array の index に使うとうまく機能しないので、代わりに場合分けで書く

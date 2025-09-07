@@ -22,18 +22,16 @@ perp :: V2 -> V2; perp (x,y) = (-y, x)
 
 fmt2 :: Double -> String
 fmt2 x = showFFloat (Just 2) x ""
+pt :: V2 -> String
+pt (x,y) = fmt2 x ++ " " ++ fmt2 y
 
 --------------------------------------------------------------------------------
--- 力学レイアウト（コンパクト寄り）
+-- 力学レイアウト
 --------------------------------------------------------------------------------
 
 data ForceParams = ForceParams
-  { steps   :: Int
-  , temp0   :: Double
-  , cool    :: Double
-  , kRep    :: Double
-  , kSpring :: Double
-  , gravity :: Double
+  { steps   :: Int, temp0 :: Double, cool :: Double
+  , kRep    :: Double, kSpring :: Double, gravity :: Double
   , minSep  :: Double
   }
 
@@ -41,8 +39,7 @@ initialOnCircle :: Int -> Double -> [V2]
 initialOnCircle n radius =
   [ (radius * cos t, radius * sin t)
   | i <- [0..n-1]
-  , let t = 2*pi*fromIntegral i / fromIntegral (max 1 n)
-  ]
+  , let t = 2*pi*fromIntegral i / fromIntegral (max 1 n) ]
 
 step :: ForceParams -> [(Int,Int)] -> [V2] -> [V2]
 step p es ps =
@@ -50,21 +47,16 @@ step p es ps =
       ctr = let (sx,sy) = foldl' (+^) (0,0) ps
                 m = fromIntegral (max 1 n)
             in (sx/m, sy/m)
-
       fRep i =
         foldl' (+^) (0,0)
           [ let d    = pi -^ pj
                 dist = norm d
                 rep  = (kRep p / (dist*dist)) *^ d
                 sep  = if dist < minSep p
-                         then ((minSep p - dist) * 2.0) *^ unit d
-                         else (0,0)
+                         then ((minSep p - dist) * 2.0) *^ unit d else (0,0)
             in rep +^ sep
           | j <- [0..n-1], j /= i
-          , let pi = ps !! i
-          , let pj = ps !! j
-          ]
-
+          , let pi = ps !! i, let pj = ps !! j ]
       fSpring i =
         foldl' (+^) (0,0)
           [ let d    = pj -^ pi
@@ -72,29 +64,21 @@ step p es ps =
                 rest = 0.6 * minSep p
                 pull = (kSpring p * (dist - rest)) *^ unit d
             in pull
-          | (u,v) <- es
-          , i == u || i == v
+          | (u,v) <- es, i == u || i == v
           , let pi = ps !! i
-          , let pj = ps !! (if i == u then v else u)
-          ]
-
-      fGrav i =
-        let pi  = ps !! i
-            dir = ctr -^ pi
-        in gravity p *^ dir
-
-      t     = temp0 p
-      force = [ fRep i +^ fSpring i +^ fGrav i | i <- [0..n-1] ]
-      move  = [ let m = norm f in if m > t then (t/m) *^ f else f | f <- force ]
+          , let pj = ps !! (if i == u then v else u) ]
+      fGrav i = let pi = ps !! i; dir = ctr -^ pi in gravity p *^ dir
+      t       = temp0 p
+      force   = [ fRep i +^ fSpring i +^ fGrav i | i <- [0..n-1] ]
+      move    = [ let m = norm f in if m > t then (t/m) *^ f else f | f <- force ]
   in zipWith (+^) ps move
 
 runLayout :: ForceParams -> [(Int,Int)] -> [V2] -> [V2]
 runLayout p es p0 = go (steps p) (temp0 p) p0
   where
     go 0 _   ps = ps
-    go k tmp ps =
-      let ps' = step (p { temp0 = tmp }) es ps
-      in go (k-1) (tmp * cool p) ps'
+    go k tmp ps = let ps' = step (p { temp0 = tmp }) es ps
+                  in go (k-1) (tmp * cool p) ps'
 
 --------------------------------------------------------------------------------
 -- 六角形（pointy-top）とドア＝辺中点
@@ -109,194 +93,237 @@ hexVertices r (cx,cy) =
 
 edgeMids :: [V2] -> [V2]
 edgeMids vs =
-  [ let (x1,y1) = vs !! i
-        (x2,y2) = vs !! ((i+1) `mod` 6)
-    in ((x1+x2)/2, (y1+y2)/2)
-  | i <- [0..5]
-  ]
+  [ let (x1,y1) = vs !! i; (x2,y2) = vs !! ((i+1) `mod` 6)
+    in ((x1+x2)/2, (y1+y2)/2) | i <- [0..5] ]
 
 doorPoint :: Double -> V2 -> Door -> V2
 doorPoint r c d = edgeMids (hexVertices r c) !! (d `mod` 6)
 
--- 辺 d の接線方向（v_d→v_{d+1}）
 edgeTangent :: Double -> V2 -> Door -> V2
 edgeTangent r c d =
-  let vs = hexVertices r c
-      a  = vs !! (d `mod` 6)
-      b  = vs !! ((d+1) `mod` 6)
+  let vs = hexVertices r c; a = vs !! (d `mod` 6); b = vs !! ((d+1) `mod` 6)
   in unit (b -^ a)
 
 --------------------------------------------------------------------------------
--- 衝突判定 & ベジエ制御点
+-- 幾何：ベジエのサンプリングで安全確認
 --------------------------------------------------------------------------------
 
-segIntersects :: V2 -> V2 -> V2 -> V2 -> Bool
-segIntersects (x1,y1) (x2,y2) (x3,y3) (x4,y4) =
-  let d = (x2-x1)*(y4-y3) - (y2-y1)*(x4-x3)
-  in if d == 0 then False
-     else
-       let s = ((x3-x1)*(y4-y3) - (y3-y1)*(x4-x3)) / d
-           t = ((x3-x1)*(y2-y1) - (y3-y1)*(x2-x1)) / d
-       in s>=0 && s<=1 && t>=0 && t<=1
+distPoint :: V2 -> V2 -> Double
+distPoint (x1,y1) (x2,y2) = sqrt ((x1-x2)^2 + (y1-y2)^2)
 
-segmentHitsHex :: Double -> V2 -> V2 -> V2 -> Bool
-segmentHitsHex r c p1 p2 =
-  let vs = hexVertices r c
-      es = [ (vs!!i, vs!!((i+1) `mod` 6)) | i <- [0..5] ]
-  in any (\(a,b)-> segIntersects p1 p2 a b) es
+cubicAt :: V2 -> V2 -> V2 -> V2 -> Double -> V2
+cubicAt p1 c1 c2 p2 t =
+  let u  = 1 - t
+      uu = u*u; tt = t*t
+      a = (uu*u) *^ p1
+      b = (3*uu*t) *^ c1
+      c = (3*u*tt) *^ c2
+      d = (tt*t)   *^ p2
+  in a +^ b +^ c +^ d
 
-needsDetour :: Double -> [V2] -> V2 -> V2 -> Bool
-needsDetour r centers p1 p2 =
-  any (\c -> segmentHitsHex r c p1 p2) centers
+safeCubic :: [(Int,V2)] -> Int -> Int -> Double -> Double
+          -> V2 -> V2 -> V2 -> V2 -> Bool
+safeCubic centers i j rad safety p1 c1 c2 p2 =
+  let r = rad + safety
+      ts = [0.10,0.20..0.90]   -- 端点は除外
+      okFor (k,c) =
+        if k == i || k == j then True
+        else all (\t -> distPoint (cubicAt p1 c1 c2 p2 t) c >= r) ts
+  in all okFor centers
 
--- ベジエ：端点外向き + ベース曲げ + 必要に応じて増量
-bezierControls
-  :: Double -> Double -> Double -> [V2]
-  -> V2 -> V2 -> V2 -> V2 -> (V2,V2)
-bezierControls r outBias bend centers ci cj p1 p2 =
-  let v1 = unit (p1 -^ ci)
-      v2 = unit (p2 -^ cj)
-      baseC1 = p1 +^ (outBias *^ v1)
-      baseC2 = p2 +^ (outBias *^ v2)
-      seg    = p2 -^ p1
-      nPerp  = unit (perp seg)
-      det    = needsDetour r centers p1 p2
-      base   = 0.25 * r                                 -- 常に少し曲げる
-      detAmt = base + (if det then 1.1 else 0.6) * bend
-      -- 左右ばらし
-      h    = round (abs (fst p1 + snd p1 + fst p2 + snd p2) * 31) :: Int
-      side = if even h then 1.0 else -1.0
-      off  = (detAmt * side) *^ nPerp
-  in (baseC1 +^ off, baseC2 +^ off)
+findOffsetCubic
+  :: [(Int,V2)] -> Int -> Int -> Double -> Double
+  -> V2 -> V2 -> V2 -> V2 -> V2 -> Double -> Double
+findOffsetCubic centers i j rad safety p1 c1b c2b p2 nperp side =
+  let base   = 0.6 * rad
+      grow a = a * 1.25
+      maxTry = 18 :: Int
+      try a k
+        | k >= maxTry = a
+        | otherwise =
+            let c1 = c1b +^ ((a*side) *^ nperp)
+                c2 = c2b +^ ((a*side) *^ nperp)
+            in if safeCubic centers i j rad safety p1 c1 c2 p2
+               then a else try (grow a) (k+1)
+  in try base 0
 
 --------------------------------------------------------------------------------
--- ユーティリティ
+-- SVG 生成（Edgeのみ。自己ループは“葉”）
 --------------------------------------------------------------------------------
 
-edgeRoomPairs :: [((RoomIndex,Door),(RoomIndex,Door))] -> [(Int,Int)]
-edgeRoomPairs es = [ (ri,rj) | ((ri,_),(rj,_)) <- es, ri /= rj ]
+layoutToSVG
+  :: Double -> Double -> Double -> Int -> Layout -> String
+layoutToSVG initRadius rad margin iters (labels, _start, edges) =
+  let n = length labels
+      idealLen  = 3.2 * rad
+      p = ForceParams { steps=iters, temp0=idealLen*0.45, cool=0.96
+                      , kRep=(idealLen*idealLen)*0.08, kSpring=0.25
+                      , gravity=0.015, minSep=2*rad+0.4*rad }
+      p0      = initialOnCircle n initRadius
+      ers     = [ (ri,rj) | ((ri,_),(rj,_)) <- edges, ri /= rj ]
+      placed0 = runLayout p ers p0
+
+      scaleTarget = idealLen * 4.8
+      (centers, w0, h0) = scaleAndPad margin scaleTarget placed0
+      w = w0 + margin; h = h0 + margin
+      centersI = zip [0..] centers
+
+      doorLabelText :: V2 -> V2 -> V2 -> String -> String
+      doorLabelText p nVec tVec txt =
+        let pos = p +^ ((0.62 * rad) *^ nVec) +^ ((0.22 * rad) *^ tVec)
+            (x,y) = pos
+        in "<text x=\"" ++ fmt2 x ++ "\" y=\"" ++ fmt2 y
+           ++ "\" font-size=\"8\" text-anchor=\"middle\" fill=\"#06c\">" ++ txt ++ "</text>"
+
+      roomSvg i c =
+        let vs  = hexVertices rad c
+            pts = intercalate " " [ fmt2 x ++ "," ++ fmt2 y | (x,y) <- vs ]
+            rl  = labels !! i
+            (cx,cy) = c; tx = cx; ty = cy + 3.5
+            doorTexts =
+              let one d = let p  = doorPoint rad c d
+                              nV = unit (p -^ c)
+                              tV = edgeTangent rad c d
+                          in doorLabelText p nV tV (show d)
+              in concatMap (\d -> [one d]) [0..5]
+        in [ "<polygon points=\"" ++ pts ++ "\" fill=\"white\" stroke=\"#333\" stroke-width=\"1.1\"/>"
+           , "<text x=\"" ++ fmt2 tx ++ "\" y=\"" ++ fmt2 ty
+             ++ "\" font-size=\"10\" text-anchor=\"middle\" fill=\"#111\">"
+             ++ ("R" ++ show i ++ " / L" ++ show rl) ++ "</text>"
+           ] ++ doorTexts
+
+      roomsSvg = concat [ roomSvg i c | (i,c) <- zip [0..] centers ]
+
+      -- 自己ループ（同一ドア）は“葉”1本ベジエ
+      selfLoopLeaf :: Int -> Door -> V2 -> String
+      selfLoopLeaf ri di p =
+        let ci = centers !! ri; t = edgeTangent rad ci di; nO = unit (p -^ ci)
+            a = 0.65*rad; b = 0.50*rad
+            c1 = p +^ ((a *^ t)) +^ ((b *^ nO))
+            c2 = p -^ ((a *^ t)) +^ ((b *^ nO))
+        in "M " ++ pt p ++ " C " ++ pt c1 ++ " " ++ pt c2 ++ " " ++ pt p
+
+      -- 1 本の cubic Bézier で滑らかに（トゲ解消）＋ 入口/出口は必ず外へ
+      singleCubicPath :: Int -> Int -> V2 -> V2 -> (V2,V2) -> (V2,V2) -> String
+      singleCubicPath i j p1 p2 (n1,t1) (n2,t2) =
+        let -- まずハンドルは純粋に外向き（接線成分は入れない）
+            out1  = 0.95 * rad
+            out2  = 0.95 * rad
+            h1b   = p1 +^ (out1 *^ n1)           -- start handle base : 外へ
+            h2b   = p2 +^ (out2 *^ n2)           -- end   handle base : 外へ
+
+            -- 曲がりは共通の横オフセットで与える（開始側は弱め）
+            dir   = unit (p2 -^ p1)
+            nperp = perp dir
+            side  = let h = round (abs (fst p1 + snd p1 + fst p2 + snd p2) * 31) :: Int
+                    in if even h then 1.0 else -1.0
+
+            safety = 0.40 * rad
+            (ii,jj) = if i == j then (-1,-2) else (i,j)
+            off    = findOffsetCubic centersI ii jj rad safety p1 h1b h2b p2 nperp side
+
+            off1  = 0.35 * off   -- ← 入口側は横ズレ弱め
+            off2  = off
+
+            c1raw = h1b +^ ((off1*side) *^ nperp)
+            c2raw = h2b +^ ((off2*side) *^ nperp)
+
+            -- 入口・出口の近傍で室内に入らないよう外向き長さを必要分だけ増やす
+            ci    = centers !! i
+            cj    = centers !! j
+            sStart = 0.18 * rad
+            sEnd   = 0.18 * rad
+            tsS    = [0.04,0.08,0.12]   -- 開始近傍だけチェック
+            tsE    = [0.88,0.92,0.96]   -- 終端近傍だけチェック
+
+            grows k = k * 1.22
+            maxTry  = 12 :: Int
+
+            okStart c1 = all (\t -> distPoint (cubicAt p1 c1 c2raw p2 t) ci >= rad + sStart) tsS
+            okEnd   c2 = all (\t -> distPoint (cubicAt p1 c1adj c2 p2 t) cj >= rad + sEnd)   tsE
+
+            -- 入口側：必要なら外向き成分だけを増やして再計算（横オフセットは維持）
+            adjustStart len k
+              | k >= maxTry = p1 +^ (len *^ n1) +^ ((off1*side) *^ nperp)
+              | otherwise   =
+                  let c1' = p1 +^ (len *^ n1) +^ ((off1*side) *^ nperp)
+                  in if okStart c1' then c1' else adjustStart (grows len) (k+1)
+            c1adj = adjustStart out1 0
+
+            -- 出口側：必要なら外向き成分だけを増やして再計算
+            adjustEnd len k
+              | k >= maxTry = p2 +^ (len *^ n2) +^ ((off2*side) *^ nperp)
+              | otherwise   =
+                  let c2' = p2 +^ (len *^ n2) +^ ((off2*side) *^ nperp)
+                  in if okEnd c2' then c2' else adjustEnd (grows len) (k+1)
+            c2adj = adjustEnd out2 0
+
+        in "M " ++ pt p1 ++ " C " ++ pt c1adj ++ " " ++ pt c2adj ++ " " ++ pt p2
+
+      edgePath ((ri,di),(rj,dj))
+        | ri == rj && di == dj =
+            let ci = centers !! ri; p  = doorPoint rad ci di
+            in "<path d=\"" ++ selfLoopLeaf ri di p
+               ++ "\" fill=\"none\" stroke=\"#06c\" stroke-width=\"1.6\" stroke-opacity=\"0.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+        | otherwise =
+            let ci = centers !! ri; cj = centers !! rj
+                p1 = doorPoint rad ci di; p2 = doorPoint rad cj dj
+                n1 = unit (p1 -^ ci);    n2 = unit (p2 -^ cj)
+                t1 = edgeTangent rad ci di; t2 = edgeTangent rad cj dj
+                d  = singleCubicPath ri rj p1 p2 (n1,t1) (n2,t2)
+            in "<path d=\"" ++ d
+               ++ "\" fill=\"none\" stroke=\"#06c\" stroke-width=\"1.6\" stroke-opacity=\"0.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+
+      edgesSvg = map edgePath edges
+      header = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" ++ fmt2 w
+            ++ "\" height=\"" ++ fmt2 h
+            ++ "\" viewBox=\"0 0 " ++ fmt2 w ++ " " ++ fmt2 h ++ "\">"
+      footer = "</svg>"
+  in unlines $ [header, "<rect x=\"0\" y=\"0\" width=\"100%\" height=\"100%\" fill=\"white\"/>"]
+            ++ roomsSvg ++ edgesSvg ++ [footer]
+
+--------------------------------------------------------------------------------
+-- スケール & パディング
+--------------------------------------------------------------------------------
 
 scaleAndPad :: Double -> Double -> [V2] -> ([V2], Double, Double)
 scaleAndPad pad scaleTarget ps =
   let xs = map fst ps; ys = map snd ps
       minX = minimum xs; maxX = maximum xs
       minY = minimum ys; maxY = maximum ys
-      w = max 1e-9 (maxX-minX)
-      h = max 1e-9 (maxY-minY)
+      w = max 1e-9 (maxX-minX); h = max 1e-9 (maxY-minY)
       s = scaleTarget / max w h
       shifted = [ ((x - minX)*s + pad, (y - minY)*s + pad) | (x,y) <- ps ]
   in (shifted, w*s + pad*2, h*s + pad*2)
 
 --------------------------------------------------------------------------------
--- SVG 生成（Edge のみ・自己ループは“葉”）
---------------------------------------------------------------------------------
-
-layoutToSVG
-  :: Double   -- 初期円半径（例: 6*rad）
-  -> Double   -- 六角半径 rad
-  -> Double   -- 余白 margin
-  -> Int      -- レイアウト反復 steps
-  -> Layout
-  -> String
-layoutToSVG initRadius rad margin iters (labels, _start, edges) =
-  let n = length labels
-
-      idealLen  = 3.2 * rad
-      p = ForceParams
-            { steps   = iters
-            , temp0   = idealLen * 0.45
-            , cool    = 0.96
-            , kRep    = (idealLen*idealLen) * 0.08
-            , kSpring = 0.25
-            , gravity = 0.015
-            , minSep  = 2*rad + 0.4*rad
-            }
-
-      p0      = initialOnCircle n initRadius
-      ers     = edgeRoomPairs edges
-      placed0 = runLayout p ers p0
-      (centers, w, h) = scaleAndPad margin (idealLen * 3.8) placed0
-
-      -- 六角 + ラベル
-      roomSvg i c =
-        let vs  = hexVertices rad c
-            pts = intercalate " " [ fmt2 x ++ "," ++ fmt2 y | (x,y) <- vs ]
-            rl  = labels !! i
-            (cx,cy) = c
-            tx = cx; ty = cy + 3.5
-        in [ "<polygon points=\"" ++ pts ++ "\" fill=\"none\" stroke=\"#333\" stroke-width=\"1\"/>"
-           , "<text x=\"" ++ fmt2 tx ++ "\" y=\"" ++ fmt2 ty
-             ++ "\" font-size=\"10\" text-anchor=\"middle\" fill=\"#111\">"
-             ++ ("R" ++ show i ++ " / L" ++ show rl) ++ "</text>"
-           ]
-
-      roomsSvg = concat [ roomSvg i c | (i,c) <- zip [0..] centers ]
-
-      -- 自己ループ：ドア p を始点・終点にして、接線 ±a と外向き +b に制御点
-      selfLoopPath :: Door -> V2 -> V2 -> String
-      selfLoopPath di ci p =
-        let t  = edgeTangent rad ci di         -- 辺の接線
-            nO = unit (p -^ ci)                -- 外向き法線（中心→ドア）
-            a  = 0.65 * rad                    -- 接線方向の伸び
-            b  = 0.48 * rad                    -- 外向きへのふくらみ
-            c1 = p +^ (a *^ t) +^ (b *^ nO)
-            c2 = p -^ (a *^ t) +^ (b *^ nO)
-        in  "M " ++ fmt2 (fst p) ++ " " ++ fmt2 (snd p)
-         ++ " C " ++ fmt2 (fst c1) ++ " " ++ fmt2 (snd c1)
-         ++ ", "  ++ fmt2 (fst c2) ++ " " ++ fmt2 (snd c2)
-         ++ ", "  ++ fmt2 (fst p)  ++ " " ++ fmt2 (snd p)
-
-      -- 通常エッジ：端点＝辺中点、Cubic Bezier（曲げは常に少し＋必要なら増量）
-      edgePath ((ri,di),(rj,dj))
-        | ri == rj =
-            let ci = centers !! ri
-                p  = doorPoint rad ci di
-            in "<path d=\"" ++ selfLoopPath di ci p
-               ++ "\" fill=\"none\" stroke=\"#06c\" stroke-width=\"1.6\" stroke-opacity=\"0.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
-        | otherwise =
-            let ci = centers !! ri
-                cj = centers !! rj
-                p1 = doorPoint rad ci di
-                p2 = doorPoint rad cj dj
-                (c1,c2) = bezierControls rad (0.85*rad) (0.55*rad) centers ci cj p1 p2
-            in "<path d=\"M " ++ fmt2 (fst p1) ++ " " ++ fmt2 (snd p1)
-               ++ " C "  ++ fmt2 (fst c1) ++ " " ++ fmt2 (snd c1)
-               ++ ", "    ++ fmt2 (fst c2) ++ " " ++ fmt2 (snd c2)
-               ++ ", "    ++ fmt2 (fst p2) ++ " " ++ fmt2 (snd p2)
-               ++ "\" fill=\"none\" stroke=\"#06c\" stroke-width=\"1.6\" stroke-opacity=\"0.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
-
-      edgesSvg = map edgePath edges
-
-      header = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" ++ fmt2 w
-            ++ "\" height=\"" ++ fmt2 h
-            ++ "\" viewBox=\"0 0 " ++ fmt2 w ++ " " ++ fmt2 h ++ "\">"
-      footer = "</svg>"
-  in unlines $ [header, "<rect x=\"0\" y=\"0\" width=\"100%\" height=\"100%\" fill=\"white\"/>"]
-            ++ roomsSvg
-            ++ edgesSvg
-            ++ [footer]
-
---------------------------------------------------------------------------------
--- 例 & 実行
+-- 例 & 実行（ご提示の example）
 --------------------------------------------------------------------------------
 
 example :: Layout
 example =
-  ( [0,1,2,1]
-  , 0
-  , [ ((0,3),(1,2))
-    , ((1,4),(3,1))
-    , ((3,5),(2,0))
-    , ((2,2),(0,1))   -- クロス
-    , ((0,0),(0,5))   -- 自己ループ（0）
-    , ((1,0),(1,0))   -- 自己ループ（1）
-    , ((2,3),(2,4))   -- 自己ループ（2）
-    , ((3,2),(3,2))   -- 自己ループ（3）
+  ( [0,1,2,0]
+  , 4
+  , [ ((0,0), (1,5))
+    , ((0,1), (0,1))
+    , ((0,2), (3,3))
+    , ((0,3), (2,5))
+    , ((0,4), (0,5))
+    , ((1,0), (1,0))
+    , ((1,1), (3,0))
+    , ((1,2), (1,2))
+    , ((1,3), (2,0))
+    , ((1,4), (3,5))
+    , ((2,1), (2,3))
+    , ((2,2), (2,2))
+    , ((2,4), (2,4))
+    , ((3,1), (3,1))
+    , ((3,2), (3,2))
     ]
   )
 
 main :: IO ()
 main = do
   let rad = 26
-  let svg = layoutToSVG (6*rad) rad 28 380 example
+  let svg = layoutToSVG (6*rad) rad 140 420 example
   writeFile "layout.svg" svg

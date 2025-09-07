@@ -8,6 +8,8 @@ module Client
   , RoomLabel
   , RoomIndex
   , Door
+  --
+  , GuessRequestMap (..)
   ) where
 
 import qualified Configuration.Dotenv as DotEnv
@@ -144,7 +146,7 @@ data GuessRequestMap
   , guessRequestMapStartingRoom :: Int
   , guessRequestMapConnections :: [Connection]
   }
-  deriving (Generic)
+  deriving (Show, Generic)
 
 instance J.ToJSON GuessRequestMap where
   toEncoding = J.genericToEncoding (customOptions "guessRequestMap")
@@ -157,7 +159,7 @@ data Connection
   { connectionFrom :: RoomDoor
   , connectionTo :: RoomDoor
   }
-  deriving (Generic)
+  deriving (Show, Generic)
 
 instance J.ToJSON Connection where
   toEncoding = J.genericToEncoding (customOptions "connection")
@@ -170,7 +172,7 @@ data RoomDoor
   { roomDoorRoom :: Int
   , roomDoorDoor :: Int
   }
-  deriving (Generic)
+  deriving (Show, Generic)
 
 instance J.ToJSON RoomDoor where
   toEncoding = J.genericToEncoding (customOptions "roomDoor")

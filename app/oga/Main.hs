@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-x-partial #-}
 module Main where
 
-import Control.Monad (when)
+import Control.Monad (when, replicateM)
 import Data.List
 import Data.Foldable (foldrM)
 import Data.Function (on)
@@ -9,6 +9,7 @@ import Data.Maybe (catMaybes)
 import Debug.Trace
 import Data.Tuple (swap)
 import System.Environment
+import qualified System.Random.MWC as Rand
 
 import Base
 import Client
@@ -16,16 +17,13 @@ import Client
 
 main :: IO ()
 main =  do
-    _progName         <- getProgName
-    problem:limit:_   <- getArgs
+    _progName <- getProgName
+    problem:limit:nRoom:_   <- getArgs
     initClient
     _ <- select problem
-    rooms <- solve (read limit)
-    if null rooms
-        then fail "Failed."
-        else do
-            ok <- guess $ traceShow (formatAnswer rooms) (formatAnswer rooms)
-            putStrLn $ if ok then "Success!" else "NG!"
+    answer <- solve (read limit) (read nRoom)
+    ok <- guess $ traceShow answer answer
+    putStrLn $ if ok then "Success!" else "NG!"
 
 
 -- | 部屋ラベルと部屋までの道のり(プラン)
@@ -72,12 +70,15 @@ fixToZRoom room doors =
     }
 
 
-solve :: Int -> IO [RoomZ]
-solve limit = do
-    (_,fixRooms,zRooms) <- solve' limit [] [] (0, [AlterLabel 1])
+solve :: Int -> Int -> IO Layout
+solve limit nRoom = do
+    planPrefix <- shufflePlan nRoom
+    (_,fixRooms,zRooms) <- solve' limit [] [] (0, planPrefix)
     mapM_ print fixRooms
     mapM_ print zRooms
-    return zRooms
+    if null zRooms
+        then fail "Failed."
+        else return $ formatAnswer zRooms planPrefix 0
 
 
 solve' 
@@ -109,12 +110,21 @@ solve' limit  fixRooms zRooms (_,plan) = do
             return (i:acc, lim-1, frs', zrs')
 
 
-formatAnswer :: [RoomZ] -> Layout
-formatAnswer rooms =
+formatAnswer :: [RoomZ] -> ParsedPlan -> RoomIndex -> Layout
+formatAnswer rooms plan rid =
     ( map rzLabel $ sortBy (compare`on`rzIndex) rooms
-    , 0
+    , trace ("n start-point="++show(length sp)) (head $ head sp)
     , calcDoorPair rooms
     )
+    where
+        sp:: [[RoomIndex]]
+        sp = startPoint [rid] (drop 1 $ reverse plan)
+
+        -- ridの部屋から prefix-plan を逆順にたどって, 本当の開始部屋を探す.
+        startPoint :: [RoomIndex] -> ParsedPlan -> [[RoomIndex]]
+        startPoint rrs        []                            = [rrs]
+        startPoint rrs@(r:rs) (PassDoor d:AlterLabel l:ps) = traceShow (rrs,(d,l),ps)
+            [ rzIndex room:rrs | room <-rooms, ((d1,_),rid1) <-rzDoors room, d1==d, rid1==r ] >>= (\rrs' -> startPoint rrs' ps)
 
 
 -- | とりあえずペアになってるドアを貪欲につなげていくだけ.
@@ -127,8 +137,18 @@ calcDoorPair rooms =
         go acc []     = acc
         go acc (((r1,r2),d):rests) 
             | r1 == r2  = go (((r1,d),(r1,d)):acc) rests
-            | otherwise = let (xs,((_,_),c):ys) = break (\((a,b),_)-> r1==b && r2==a) rests
+            | otherwise = traceShow (r1,r2,d,rests) $
+                          let (xs,((_,_),c):ys) = break (\((a,b),_)-> r1==b && r2==a) rests
                           in go (((r1,d),(r2,c)):acc) (xs++ys)
+
+
+-- | 部屋ラベルをランダムに書き換えて回るプラン
+shufflePlan :: Int -> IO ParsedPlan
+shufflePlan len = do
+    gen <- Rand.createSystemRandom
+    doors <- fmap (map PassDoor) $ replicateM (len+1) (Rand.uniformR (0::Door, 5) gen)
+    alters<- fmap (map AlterLabel) $ replicateM (len+1) (Rand.uniformR (0::RoomLabel, 3) gen)
+    return $ drop 1 $ concat $ transpose [doors, alters]
 
 
 allDoors :: ParsedPlan

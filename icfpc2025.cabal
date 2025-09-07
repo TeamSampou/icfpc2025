@@ -1,6 +1,6 @@
 cabal-version: 1.18
 
--- This file has been generated from package.yaml by hpack version 0.38.2.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -156,6 +156,7 @@ executable oga-solve1
     , filepath
     , icfpc2025
     , mtl
+    , mwc-random
     , process
     , stm
     , text

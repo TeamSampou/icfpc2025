@@ -29,7 +29,6 @@ import qualified Data.Vector as V
 
 import qualified Data.GraphViz.Attributes as GraphViz
 import qualified Data.GraphViz.Commands as GraphViz
-import qualified Data.GraphViz.Commands.IO as GraphViz
 import qualified Data.GraphViz.Types.Generalised as GraphViz
 import qualified Data.GraphViz.Types.Monadic as GraphViz
 

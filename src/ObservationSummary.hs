@@ -126,8 +126,8 @@ saturateDisequalities xs = loop xs xs
               pure $ if (p1' < p2') then (p1', p2') else (p2', p1')
             _ -> []
 
-test_deriveNontrivialDisequalities :: [(Plan, Plan, Maybe RoomLabel)]
-test_deriveNontrivialDisequalities = [assert (lookup p1 t == lookup p2 t) (p1, p2, lookup p1 t) | (p1,p2) <- Set.toList deqs]
+_test_deriveNontrivialDisequalities :: [(Plan, Plan, Maybe RoomLabel)]
+_test_deriveNontrivialDisequalities = [assert (lookup p1 t == lookup p2 t) (p1, p2, lookup p1 t) | (p1,p2) <- Set.toList deqs]
   where
     deqs = deriveNontrivialDisequalities t
 

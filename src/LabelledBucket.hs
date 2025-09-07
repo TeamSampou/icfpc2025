@@ -301,13 +301,15 @@ getLayout srcs rooms = do
 
 type Problem = (String, Int)
 
-probatio, primus, secundus, tertius
+probatio, primus, secundus, tertius, quartus, quintus
   :: Problem
 
 probatio  = ("probatio"  ,   3)
 primus    = ("primus"    ,   6)
 secundus  = ("secundus"  ,  12)
 tertius   = ("tertius"   ,  18)
+quartus   = ("quartus"   ,  24)
+quintus   = ("quintus"   ,  30)
 
 -----
 

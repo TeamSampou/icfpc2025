@@ -3,6 +3,7 @@
 module FilesIO where
 
 import Data.ByteString.Lazy qualified as LB
+import Data.ByteString.Lazy.Char8 qualified as L8
 import Data.Time (defaultTimeLocale, formatTime, getZonedTime)
 import System.FilePath ((</>), (<.>))
 import System.Directory
@@ -78,3 +79,20 @@ writeSolutions guessMap resp = do
   let name = tsname s
   LB.writeFile (dir </> name <.> "guess") (J.encode guessMap <> "\n")
   LB.writeFile (dir </> name <.> "resp") (resp <> "\n")
+
+readExplores :: String -> IO ([[String]], [LB.ByteString])
+readExplores name = do
+  let plansPath = exploresDir </> name <.> "plans"
+      resultsPath = exploresDir </> name <.> "results"
+  plans <- map read . lines <$> readFile plansPath
+  results <- L8.lines <$> LB.readFile resultsPath
+  pure (plans, results)
+
+readSolutions :: J.FromJSON a => String -> IO (a, LB.ByteString)
+readSolutions name = do
+  let guessPath = solutionsDir </> name <.> "guess"
+      respPath = solutionsDir </> name <.> "resp"
+      decode' bs = maybe (fail $ "readSolutions: decode-error: " ++ show bs) pure $ J.decode bs
+  guess <- decode' =<< LB.readFile guessPath
+  resp <- LB.readFile respPath
+  pure (guess, resp)

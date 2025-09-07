@@ -4,11 +4,7 @@ module LayoutHexSVG where
 import Data.List (intercalate, foldl')
 import Numeric   (showFFloat)
 
--- 型
-type RoomLabel = Int
-type RoomIndex = Int
-type Door      = Int
-type Layout = ([RoomLabel], RoomIndex, [((RoomIndex, Door), (RoomIndex, Door))])
+import Base (Layout, RoomLabel, RoomIndex, Door)
 
 -- 2D ベクトル
 type V2 = (Double, Double)

@@ -58,6 +58,17 @@ findGraph' numRooms t@(Trie.Node startingRoomLabel _ _) = do
         Z3.solverAssertCnstr =<< Z3.mkLe r2 ub
     return func
 
+  -- 部屋の間のエッジは逆向きのエッジが存在しないといけない。
+  -- 本当は本数まであっていないといけないが、ここでは存在だけを制約にする。
+  forM_ rooms $ \room -> do
+    forM_ doorFuncs $ \df -> do
+       -- d_1(d_i(room))=room ∨ … ∨ d_n(d_i(room))=room
+       room2 <- Z3.mkApp df [room]
+       cs <- forM doorFuncs $ \df2 -> do
+         room3 <- Z3.mkApp df2 [room2]
+         Z3.mkEq room room3
+       Z3.solverAssertCnstr =<< Z3.mkOr cs
+
   sLabel <- Z3.mkBvSort 2
   let fixedLabels = startingRoomLabel : IntSet.toList (IntSet.delete startingRoomLabel (Trie.collectUnmodifiedLabels t))
   startingLabels <- forM [0..numRooms-1] $ \i -> do

@@ -163,17 +163,24 @@ layoutToSVG initRadius rad margin iters (labels, _start, edges) =
       ers     = [ (ri,rj) | ((ri,_),(rj,_)) <- edges, ri /= rj ]
       placed0 = runLayout p ers p0
 
-      scaleTarget = idealLen * 4.8
+      scaleTarget = idealLen * 3.6
       (centers, w0, h0) = scaleAndPad margin scaleTarget placed0
       w = w0 + margin; h = h0 + margin
       centersI = zip [0..] centers
 
-      doorLabelText :: V2 -> V2 -> V2 -> String -> String
-      doorLabelText p nVec tVec txt =
+      -- そのドアが使われているか（自己ループ含む）
+      usedDoor :: Int -> Int -> Bool
+      usedDoor ri di =
+        any (\((a,da),(b,db)) -> (a==ri && da==di) || (b==ri && db==di)) edges
+
+      doorLabelText :: Int -> V2 -> V2 -> V2 -> Int -> String
+      doorLabelText ri p nVec tVec d =
         let pos = p +^ ((0.62 * rad) *^ nVec) +^ ((0.22 * rad) *^ tVec)
             (x,y) = pos
+            col = if usedDoor ri d then "#06c" else "#e88"
         in "<text x=\"" ++ fmt2 x ++ "\" y=\"" ++ fmt2 y
-           ++ "\" font-size=\"8\" text-anchor=\"middle\" fill=\"#06c\">" ++ txt ++ "</text>"
+           ++ "\" font-size=\"8\" text-anchor=\"middle\" fill=\"" ++ col ++ "\">"
+           ++ show d ++ "</text>"
 
       roomSvg i c =
         let vs  = hexVertices rad c
@@ -184,7 +191,7 @@ layoutToSVG initRadius rad margin iters (labels, _start, edges) =
               let one d = let p  = doorPoint rad c d
                               nV = unit (p -^ c)
                               tV = edgeTangent rad c d
-                          in doorLabelText p nV tV (show d)
+                          in doorLabelText i p nV tV d
               in concatMap (\d -> [one d]) [0..5]
         in [ "<polygon points=\"" ++ pts ++ "\" fill=\"white\" stroke=\"#333\" stroke-width=\"1.1\"/>"
            , "<text x=\"" ++ fmt2 tx ++ "\" y=\"" ++ fmt2 ty
@@ -203,62 +210,69 @@ layoutToSVG initRadius rad margin iters (labels, _start, edges) =
             c2 = p -^ ((a *^ t)) +^ ((b *^ nO))
         in "M " ++ pt p ++ " C " ++ pt c1 ++ " " ++ pt c2 ++ " " ++ pt p
 
-      -- 1 本の cubic Bézier で滑らかに（トゲ解消）＋ 入口/出口は必ず外へ
+      -- 1 本の cubic Bézier：左右案を作り、上空侵入ペナルティが小さい方を採用
       singleCubicPath :: Int -> Int -> V2 -> V2 -> (V2,V2) -> (V2,V2) -> String
-      singleCubicPath i j p1 p2 (n1,t1) (n2,t2) =
-        let -- まずハンドルは純粋に外向き（接線成分は入れない）
-            out1  = 0.95 * rad
-            out2  = 0.95 * rad
-            h1b   = p1 +^ (out1 *^ n1)           -- start handle base : 外へ
-            h2b   = p2 +^ (out2 *^ n2)           -- end   handle base : 外へ
-
-            -- 曲がりは共通の横オフセットで与える（開始側は弱め）
-            dir   = unit (p2 -^ p1)
-            nperp = perp dir
-            side  = let h = round (abs (fst p1 + snd p1 + fst p2 + snd p2) * 31) :: Int
-                    in if even h then 1.0 else -1.0
-
+      singleCubicPath i j p1 p2 (n1,_t1) (n2,_t2) =
+        let out1 = 0.95 * rad
+            out2 = 0.95 * rad
+            h1b  = p1 +^ (out1 *^ n1)
+            h2b  = p2 +^ (out2 *^ n2)
+            dir  = unit (p2 -^ p1)
+            nperp= perp dir
             safety = 0.40 * rad
             (ii,jj) = if i == j then (-1,-2) else (i,j)
-            off    = findOffsetCubic centersI ii jj rad safety p1 h1b h2b p2 nperp side
 
-            off1  = 0.35 * off   -- ← 入口側は横ズレ弱め
-            off2  = off
+            build side =
+              let off   = findOffsetCubic centersI ii jj rad safety p1 h1b h2b p2 nperp side
+                  off1  = 0.35 * off
+                  c1b   = h1b +^ ((off1*side) *^ nperp)
+                  c2b   = h2b +^ ((off*side)  *^ nperp)
+                  -- 入口/出口の室内侵入を見たら外向き成分だけ増やす
+                  ci = centers !! i; cj = centers !! j
+                  tsS = [0.04,0.08,0.12]; tsE = [0.88,0.92,0.96]
+                  grows k = k*1.22; maxTry=12::Int
+                  okS len = all (\t -> distPoint (cubicAt p1 (p1 +^ (len *^ n1) +^ ((off1*side) *^ nperp)) c2b p2 t) ci >= rad + 0.18*rad) tsS
+                  okE len = all (\t -> distPoint (cubicAt p1 c1adj (p2 +^ (len *^ n2) +^ ((off *side) *^ nperp)) p2 t)  cj >= rad + 0.18*rad) tsE
+                  adjS len k
+                    | k>=maxTry = p1 +^ (len *^ n1) +^ ((off1*side) *^ nperp)
+                    | okS len   = p1 +^ (len *^ n1) +^ ((off1*side) *^ nperp)
+                    | otherwise = adjS (grows len) (k+1)
+                  c1adj = adjS out1 0
+                  adjE len k
+                    | k>=maxTry = p2 +^ (len *^ n2) +^ ((off *side) *^ nperp)
+                    | okE len   = p2 +^ (len *^ n2) +^ ((off *side) *^ nperp)
+                    | otherwise = adjE (grows len) (k+1)
+                  c2adj = adjE out2 0
+              in (c1adj,c2adj)
 
-            c1raw = h1b +^ ((off1*side) *^ nperp)
-            c2raw = h2b +^ ((off2*side) *^ nperp)
+            (c1p,c2p) = build   1.0
+            (c1m,c2m) = build (-1.0)
 
-            -- 入口・出口の近傍で室内に入らないよう外向き長さを必要分だけ増やす
-            ci    = centers !! i
-            cj    = centers !! j
-            sStart = 0.18 * rad
-            sEnd   = 0.18 * rad
-            tsS    = [0.04,0.08,0.12]   -- 開始近傍だけチェック
-            tsE    = [0.88,0.92,0.96]   -- 終端近傍だけチェック
+            -- 上空侵入ペナルティ（部屋中心より上側かつ半径2.2*rad以内）
+            airPenalty (c1,c2) =
+              let ts = [0.05,0.10..0.95]
+                  pen center =
+                    let (_,cy) = center
+                    in sum [ if py < cy && distPoint p center < 2.2*rad then (1::Int) else 0
+                           | t <- ts, let p@(_,py) = cubicAt p1 c1 c2 p2 t ]
+              in fromIntegral (pen (centers !! i) + pen (centers !! j)) :: Double
 
-            grows k = k * 1.22
-            maxTry  = 12 :: Int
+            -- 予備：部屋からの最近距離（大きい方を好む）
+            clearance (c1,c2) =
+              let ts = [0.05,0.10..0.95]
+                  ds = [ min (distPoint (cubicAt p1 c1 c2 p2 t) (centers !! i))
+                               (distPoint (cubicAt p1 c1 c2 p2 t) (centers !! j))
+                        | t <- ts ]
+              in minimum ds
 
-            okStart c1 = all (\t -> distPoint (cubicAt p1 c1 c2raw p2 t) ci >= rad + sStart) tsS
-            okEnd   c2 = all (\t -> distPoint (cubicAt p1 c1adj c2 p2 t) cj >= rad + sEnd)   tsE
-
-            -- 入口側：必要なら外向き成分だけを増やして再計算（横オフセットは維持）
-            adjustStart len k
-              | k >= maxTry = p1 +^ (len *^ n1) +^ ((off1*side) *^ nperp)
-              | otherwise   =
-                  let c1' = p1 +^ (len *^ n1) +^ ((off1*side) *^ nperp)
-                  in if okStart c1' then c1' else adjustStart (grows len) (k+1)
-            c1adj = adjustStart out1 0
-
-            -- 出口側：必要なら外向き成分だけを増やして再計算
-            adjustEnd len k
-              | k >= maxTry = p2 +^ (len *^ n2) +^ ((off2*side) *^ nperp)
-              | otherwise   =
-                  let c2' = p2 +^ (len *^ n2) +^ ((off2*side) *^ nperp)
-                  in if okEnd c2' then c2' else adjustEnd (grows len) (k+1)
-            c2adj = adjustEnd out2 0
-
-        in "M " ++ pt p1 ++ " C " ++ pt c1adj ++ " " ++ pt c2adj ++ " " ++ pt p2
+            pPen = airPenalty (c1p,c2p)
+            mPen = airPenalty (c1m,c2m)
+            (c1,c2) =
+              if pPen < mPen then (c1p,c2p)
+              else if mPen < pPen then (c1m,c2m)
+              else if clearance (c1p,c2p) >= clearance (c1m,c2m)
+                   then (c1p,c2p) else (c1m,c2m)
+        in "M " ++ pt p1 ++ " C " ++ pt c1 ++ " " ++ pt c2 ++ " " ++ pt p2
 
       edgePath ((ri,di),(rj,dj))
         | ri == rj && di == dj =
@@ -297,7 +311,7 @@ scaleAndPad pad scaleTarget ps =
   in (shifted, w*s + pad*2, h*s + pad*2)
 
 --------------------------------------------------------------------------------
--- 例 & 実行（ご提示の example）
+-- 例 & 実行
 --------------------------------------------------------------------------------
 
 example :: Layout
@@ -324,6 +338,6 @@ example =
 
 main :: IO ()
 main = do
-  let rad = 26
+  let rad = 36
   let svg = layoutToSVG (6*rad) rad 140 420 example
   writeFile "layout.svg" svg

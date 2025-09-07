@@ -1,5 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module LayoutHexSVG where
+module LayoutHexSVG
+  ( layoutToSVGFile
+  ) where
 
 import Data.List (intercalate, foldl')
 import Numeric   (showFFloat)
@@ -368,6 +370,18 @@ scaleAndPad pad scaleTarget ps =
       s = scaleTarget / max w h
       shifted = [ ((x - minX)*s + pad, (y - minY)*s + pad) | (x,y) <- ps ]
   in (shifted, w*s + pad*2, h*s + pad*2)
+
+
+
+--------------------------------------------------------------------------------
+-- API
+--------------------------------------------------------------------------------
+
+layoutToSVGFile :: Layout -> FilePath -> IO ()
+layoutToSVGFile layout path = do
+  let rad = 36
+  let svg = layoutToSVG (6*rad) rad 140 420 layout
+  writeFile path svg
 
 --------------------------------------------------------------------------------
 -- 例 & 実行

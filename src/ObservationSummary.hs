@@ -103,11 +103,10 @@ saturateDisequalities xs = loop xs xs
   where
     loop :: Set (Seq Door, Seq Door) -> Set (Seq Door, Seq Door) -> Set (Seq Door, Seq Door)
     loop current added
-      | Set.null new = current
-      | otherwise = loop (current `Set.union` new) new
+      | Set.null added = current
+      | otherwise = loop (current `Set.union` new) (new `Set.difference` current)
       where
-        new = new' `Set.difference` current
-        new' = Set.fromList $ do
+        new = Set.fromList $ do
           (p1, p2) <- Set.toList added
           case (p1, p2) of
             (p1' Seq.:|> d1, p2' Seq.:|> d2) | d1 == d2 ->

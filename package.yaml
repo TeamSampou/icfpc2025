@@ -109,6 +109,7 @@ executables:
     - -rtsopts
     dependencies:
     - icfpc2025
+    - mwc-random
 
 tests:
   icfpc2025-test:

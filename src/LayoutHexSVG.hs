@@ -234,13 +234,19 @@ layoutToSVG initRadius rad margin iters (labels, _start, edges) =
       usedDoor ri di =
         any (\((a,da),(b,db)) -> (a==ri && da==di) || (b==ri && db==di)) edges
 
+      -- ドア番号の描画：線色とは独立してグレー系に
       doorLabelText :: Int -> V2 -> V2 -> V2 -> Int -> String
       doorLabelText ri p nVec tVec d =
-        let pos = p +^ ((0.62 * rad) *^ nVec) +^ ((0.22 * rad) *^ tVec)
+        -- 位置は辺のすぐ外側＋接線方向に少し逃がす
+        let pos = p +^ ((0.42 * rad) *^ nVec) +^ ((0.12 * rad) *^ tVec)
             (x,y) = pos
-            col = if usedDoor ri d then "#06c" else "#e88"
+            colUsed   = "#666"
+            colUnused = "#e22"
+            col = if usedDoor ri d then colUsed else colUnused
         in "<text x=\"" ++ fmt2 x ++ "\" y=\"" ++ fmt2 y
-           ++ "\" font-size=\"8\" text-anchor=\"middle\" fill=\"" ++ col ++ "\">"
+           ++ "\" font-size=\"11\" font-weight=\"600\" text-anchor=\"middle\" "
+           ++ "paint-order=\"stroke\" stroke=\"#fff\" stroke-width=\"1.2\" "
+           ++ "fill=\"" ++ col ++ "\">"
            ++ show d ++ "</text>"
 
       roomSvg i c =

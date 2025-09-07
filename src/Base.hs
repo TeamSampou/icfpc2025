@@ -50,7 +50,7 @@ parsePlan ('[' : l : ']' : xs) = AlterLabel (read [l]) : parsePlan xs
 parsePlan (d : xs) = PassDoor (read [d]) : parsePlan xs
 
 renderPlan :: ParsedPlan -> Plan
-renderPlan plan =  foldr ($) "" (map f plan)
+renderPlan plan = foldr ($) "" (map f plan)
   where
     f :: Action -> ShowS
     f (PassDoor d) = shows d

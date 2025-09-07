@@ -34,6 +34,7 @@ library
       FilesIO
       Graph
       Lib
+      LayoutHexSVG
       ObservationSummary
   other-modules:
       Paths_icfpc2025

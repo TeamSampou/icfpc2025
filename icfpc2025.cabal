@@ -33,9 +33,10 @@ library
       Client
       FilesIO
       Graph
-      Lib
       LayoutHexSVG
+      Lib
       ObservationSummary
+      TypesJSON
   other-modules:
       Paths_icfpc2025
   hs-source-dirs:

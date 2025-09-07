@@ -15,10 +15,10 @@ import Client
 
 main :: IO ()
 main =  do
-    progName          <- getProgName
+    _progName         <- getProgName
     problem:limit:_   <- getArgs
     initClient
-    select problem
+    _ <- select problem
     rooms <- solve (read limit)
     if null rooms
         then fail "Failed."
@@ -41,6 +41,8 @@ data RoomF = RoomF
   , rfPlan  :: Plan
   } deriving Show
 
+-- | 隣接する部屋の番号も確定した部屋データ.
+-- なので RoomRaw→RoomF→RoomZの順で情報を確定させる
 data RoomZ = RoomZ
   { rzLabel :: Int
   , rzDoors :: [((Door, RoomP), RoomIndex)]
@@ -72,7 +74,6 @@ fixToZRoom room doors =
 solve :: Int -> IO [RoomZ]
 solve limit = do
     (_,fixRooms,zRooms) <- solve' limit [] [] (0,"")
-    putStrLn $ "fixRooms=" ++ show(length fixRooms) ++ ", zRooms=" ++ show(length zRooms)
     mapM_ print fixRooms
     mapM_ print zRooms
     return zRooms
@@ -87,22 +88,24 @@ solve'
 solve' 0       _       _       _       = error "limit reached, abort."
 solve' limit  fixRooms zRooms (_,plan) = do
     putStrLn $ "count " ++ show limit ++ ", fixRooms=" ++ show(length fixRooms) ++ ", zRooms=" ++ show(length zRooms) ++ ", plan=" ++ plan
-    --mapM_ print zRooms
     -- とりあえず全部のドアを開ける
-    raw@(room,neighbors) <- openAllDoor plan
+    raw@(_room, neighbors) <- openAllDoor plan
     -- ドアパターンを既知の部屋を比較して部屋番号を確定する
     let (known, rid, fixRooms') = updateFixRooms fixRooms raw
+    -- 既知の部屋(つまり別の枝ですでに探索中の部屋)だったらここで終わり
     if known
         then return (rid, fixRooms', zRooms)
         else do
         -- 隣接の部屋の番号も確定させる
-        (nids, limit', fixRooms'', zRooms') <-  foldrM f ([],limit-1,fixRooms',zRooms) (map snd neighbors)
+        (nids, _limit', fixRooms'', zRooms') <-  foldrM f ([],limit-1,fixRooms',zRooms) (map snd neighbors)
         -- ようやく全部確定
         return (rid, fixRooms'', fixToZRoom (rawToFixRoom raw rid) (zip[0..]nids) : zRooms')
     where
-        f n (rs,lim,frs,zrs) = do
+        -- | solve' を foldrM するのにラップしてる版. accに隣接部屋番号を蓄積する
+        f :: RoomP -> ([RoomIndex], Int, [RoomF], [RoomZ]) -> IO ([RoomIndex], Int, [RoomF], [RoomZ])
+        f n (acc,lim,frs,zrs) = do
             (i,frs',zrs') <- solve' lim frs zrs n
-            return (i:rs, lim-1, frs', zrs')
+            return (i:acc, lim-1, frs', zrs')
 
 
 formatAnswer :: [RoomZ] -> Layout
@@ -113,15 +116,17 @@ formatAnswer rooms =
     )
 
 
--- | とりあえずペアになってるドアを貪欲につなげていくだけ
+-- | とりあえずペアになってるドアを貪欲につなげていくだけ.
+-- 外に繋がるドアは, 等価な重複がなければ, 必ず逆向きがあるのでペアにして潰してく
 calcDoorPair ::  [RoomZ] -> [((RoomIndex, Door), (RoomIndex, Door))]
 calcDoorPair rooms =
     go [] [ ((room1,room2),d)  | r <-rooms, let room1 = rzIndex r, ((d,_),room2)<-rzDoors r]
     where
+        go :: [((RoomIndex, Door), (RoomIndex, Door))] -> [((RoomIndex, RoomIndex), Door)] -> [((RoomIndex, Door), (RoomIndex, Door))]
         go acc []     = acc
         go acc (((r1,r2),d):rests) 
             | r1 == r2  = go (((r1,d),(r1,d)):acc) rests
-            | otherwise = let (xs,((a,b),c):ys) = break (\((a,b),c)-> r1==b && r2==a) rests
+            | otherwise = let (xs,((_,_),c):ys) = break (\((a,b),_)-> r1==b && r2==a) rests
                           in go (((r1,d),(r2,c)):acc) (xs++ys)
 
 
@@ -145,6 +150,7 @@ updateFixRooms fixs raw =
         _     -> (False, nextIndex, rawToFixRoom raw nextIndex : fixs) -- 新規
     where
         -- 番号は新しい部屋が見つかった順に振っていくだけ
+        nextIndex :: RoomIndex
         nextIndex = maximum (-1 : map rfIndex fixs) + 1
 
 

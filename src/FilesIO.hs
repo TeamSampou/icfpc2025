@@ -17,7 +17,7 @@ import TypesJSON (ExploreResponse (..))
 
 timestamp :: IO String
 timestamp =
-  formatTime defaultTimeLocale "%d-%H%M" <$> getZonedTime
+  formatTime defaultTimeLocale "%d-%H%M%S" <$> getZonedTime
 
 setupDir :: FilePath -> IO FilePath
 setupDir dir = do

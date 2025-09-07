@@ -35,6 +35,7 @@ library
       FilesIO
       Graph
       Graph.Z3
+      LabelledBucket
       LayoutHexSVG
       Lib
       ObservationSummary

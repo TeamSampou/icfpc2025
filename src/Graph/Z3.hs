@@ -51,7 +51,9 @@ findGraph' numRooms t@(Trie.Node startingRoomLabel _ _) = do
     else do
       sym <- Z3.mkStringSymbol $ "starting_label_" ++ show i
       Z3.mkVar sym sLabel
-
+  -- symmetry breaking
+  forM_ [length fixedLabels .. numRooms - 2] $ \i -> do
+    Z3.solverAssertCnstr =<< Z3.mkBvule (startingLabels !! i) (startingLabels !! (i+1))
 
   -- Finite-domain sort は Array の index に使うとうまく機能しないので、代わりに場合分けで書く
   let select :: [Z3.AST] -> Z3.AST -> z3 Z3.AST

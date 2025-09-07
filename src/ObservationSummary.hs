@@ -50,18 +50,21 @@ import Base
 type ObservationSummary = Trie RoomLabel
 
 toDotGraph :: ObservationSummary -> GraphViz.DotGraph Text
-toDotGraph t = GraphViz.digraph' $ f [] t
+toDotGraph t = GraphViz.digraph' $ f Seq.empty t
   where
-    pathToNodeName :: [Door] -> Text
-    pathToNodeName path = T.pack $ "node" ++ concatMap show (reverse path)
+    histToNodeName :: Seq Action -> Text
+    histToNodeName hist = T.pack $ "node" ++ seqToPlan hist
 
-    f :: [Door] -> ObservationSummary -> GraphViz.DotM Text Text
-    f path (Node l childrenD _childrenL) = do -- FIXME
-      let name = pathToNodeName path
-      GraphViz.node name [GraphViz.toLabel (show l)]
+    f :: Seq Action -> ObservationSummary -> GraphViz.DotM Text Text
+    f hist (Node label childrenD childrenL) = do
+      let name = histToNodeName hist
+      GraphViz.node name [GraphViz.toLabel (show label)]
       forM_ (IntMap.toList childrenD) $ \(d, ch) -> do
-        name' <- f (d : path) ch
+        name' <- f (hist Seq.|> PassDoor d) ch
         GraphViz.edge name name' [GraphViz.toLabel (show d)]
+      forM_ (IntMap.toList childrenL) $ \(l, ch) -> do
+        name' <- f (hist Seq.|> AlterLabel l) ch
+        GraphViz.edge name name' [GraphViz.toLabel (show l), GraphViz.style GraphViz.dotted]
       pure name
 
 writePng :: FilePath -> ObservationSummary -> IO ()

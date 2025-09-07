@@ -21,6 +21,12 @@ setupDir dir = do
 
 -----
 
+data State =
+  State
+  { problem    :: String
+  , tsname     :: String
+  } deriving (Show, Read)
+
 exploresDir :: FilePath
 exploresDir = "explores"
 
@@ -33,33 +39,42 @@ selectedFile = exploresDir </> "selected.txt"
 selectStamp :: String -> IO ()
 selectStamp problemName = do
   createDirectoryIfMissing True exploresDir
-  writeFile selectedFile (problemName <> "\n")
+  ts <- timestamp
+  let s = State{problem = problemName, tsname = ts}
+  writeFile selectedFile (show s <> "\n")
 
-getSelected :: IO String
+getSelected :: IO State
 getSelected = do
   exist <- doesFileExist selectedFile
   if exist
-    then withFile selectedFile ReadMode hGetLine
-    else pure "unknown"
+    then readIO =<< withFile selectedFile ReadMode hGetLine
+    else fallback
+  where fallback = do
+          ts <- timestamp
+          pure $ State{problem = "unknown", tsname = ts}
 
-setupExploresDir :: IO (FilePath, String)
+setupExploresDir :: IO (FilePath, State)
 setupExploresDir = do
-  let dir = setupDir . (exploresDir </>) =<< getSelected
-  (,) <$> dir <*> timestamp
+  s <- getSelected
+  let dir = setupDir (exploresDir </> problem s)
+  (,) <$> dir <*> pure s
 
-setupSolutionsDir :: IO (FilePath, String)
+setupSolutionsDir :: IO (FilePath, State)
 setupSolutionsDir = do
-  let dir = setupDir . (solutionsDir </>) =<< getSelected
-  (,) <$> dir <*> timestamp
+  s <- getSelected
+  let dir = setupDir (solutionsDir </> problem s)
+  (,) <$> dir <*> pure s
 
 writeExplores :: Show a => a -> LB.ByteString -> IO ()
 writeExplores plans results = do
-  (dir, name) <- setupExploresDir
+  (dir, s) <- setupExploresDir
+  let name = tsname s
   appendFile (dir </> name <.> "plans") (show plans <> "\n")
   LB.appendFile (dir </> name <.> "results") (results <> "\n")
 
 writeSolutions :: J.ToJSON a => a -> LB.ByteString -> IO ()
 writeSolutions guessMap resp = do
-  (dir, name) <- setupSolutionsDir
+  (dir, s) <- setupSolutionsDir
+  let name = tsname s
   LB.writeFile (dir </> name <.> "guess") (J.encode guessMap <> "\n")
   LB.writeFile (dir </> name <.> "resp") (resp <> "\n")

@@ -19,12 +19,16 @@ packages:
   original:
     hackage: dotenv-0.12.0.0@sha256:2f25615cec37ff9a66a48ef0ebf2ac96ae989911d0c26c6796fc2f5247bdd665,4702
 - completed:
-    hackage: z3-408.2@sha256:1f8b6ccbcc6d06a6701900a09fcfcbaf86ed8a8495615710bef4da5cdb073a3f,4226
+    commit: b77a17e5eeb7db82656bcbcd66c6e952207e69ca
+    git: https://github.com/IagoAbal/haskell-z3.git
+    name: z3
     pantry-tree:
-      sha256: e8562391054f4e07035ab25e1c7ecfba687a46e15aefee4c588b6434dc0b93d8
-      size: 1476
+      sha256: 991b51749ed89306e80e1bc62c97539991b1a4b2bfc8aae9d6f98480200f48d5
+      size: 2289
+    version: 411.0.1
   original:
-    hackage: z3-408.2@sha256:1f8b6ccbcc6d06a6701900a09fcfcbaf86ed8a8495615710bef4da5cdb073a3f,4226
+    commit: b77a17e5eeb7db82656bcbcd66c6e952207e69ca
+    git: https://github.com/IagoAbal/haskell-z3.git
 snapshots:
 - completed:
     sha256: d347039f81388e16ea93ddaf9ff1850abfba8f8680ff75fbdd177692542ceb26

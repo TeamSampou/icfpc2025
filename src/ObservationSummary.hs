@@ -7,6 +7,7 @@ module ObservationSummary
  , deriveDisequalities
  , deriveNontrivialDisequalities
  , deriveTrivialDisequalities
+ , collectUnmodifiedLabels
 
  -- * Trie
  , Trie (..)
@@ -28,6 +29,8 @@ import Control.Monad
 import qualified Data.Foldable as F
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
+import Data.IntSet (IntSet)
+import qualified Data.IntSet as IntSet
 import Data.List (foldl1')
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
@@ -134,6 +137,13 @@ test_deriveNontrivialDisequalities = [assert (lookup p1 t == lookup p2 t) (p1, p
     result = [0,3,0,1,2,3,0,1,0,0,1,1,0,1,1,0,1,1,0,0,0,1,3,2,3,0,1,1,0,3,0,0,0,0,1,2,1,2,2,2,1,2,3,2,2,2,1,0,1,0,1,0,1,0,1]
 
     t = fromObservation plan result
+
+-- | 初期状態で存在したラベルの一覧の取得
+--
+-- 変更後のラベルは無視するので childrenL の方には再帰しない
+collectUnmodifiedLabels :: ObservationSummary -> IntSet
+collectUnmodifiedLabels (Node label childrenD _childrenL) =
+  IntSet.insert label $ IntSet.unions $ map collectUnmodifiedLabels (IntMap.elems childrenD)
 
 -- ------------------------------------------------------------------------
 

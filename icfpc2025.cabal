@@ -34,6 +34,7 @@ library
       ClientWrapper
       FilesIO
       Graph
+      Graph.Z3
       LayoutHexSVG
       Lib
       ObservationSummary
@@ -70,6 +71,7 @@ library
     , text
     , time
     , vector
+    , z3
   default-language: GHC2024
 
 executable add-entry

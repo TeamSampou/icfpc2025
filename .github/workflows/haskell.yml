@@ -35,6 +35,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt-get install -y z3
         cabal update
         cabal install hspec-discover --overwrite-policy=always
         cabal build --only-dependencies --enable-tests --enable-benchmarks

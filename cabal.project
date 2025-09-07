@@ -1,0 +1,5 @@
+packages: .
+source-repository-package
+  type: git
+  location: https://github.com/IagoAbal/haskell-z3
+  tag: b77a17e5eeb7db82656bcbcd66c6e952207e69ca

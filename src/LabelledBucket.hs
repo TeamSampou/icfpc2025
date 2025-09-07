@@ -347,19 +347,6 @@ solveBF Driver{..} (prob, size) ename bdepth = do
   let srcs = [P p | sz <- [0 .. bdepth - 2], p <- replicateM sz allDoors]
   (,) <$> getLayout (srcs ++ asrcs) rooms2 <*> pure qc
 
-solveFromResult :: Int -> [String] -> Int -> [ResultI] -> IO Layout
-solveFromResult _size plans bdepth resultsI = do
-  bucket <- newCandBucket
-  let run plan = runExploreIO (\_ -> pure ()) bucket (fromString plan)
-      results = [map fromIntegral ri | ri <- resultsI]
-  zipWithM_ run plans results
-  putStr . unlines =<< pprsCandBucket bucket
-
-  fillss <- byRooms bucket
-
-  let srcs = [P p | sz <- [0 .. bdepth - 2], p <- replicateM sz allDoors]
-  getLayout srcs fillss
-
 -----
 
 _example1 :: IO ()

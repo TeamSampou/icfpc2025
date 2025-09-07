@@ -31,6 +31,7 @@ library
   exposed-modules:
       Base
       Client
+      ClientWrapper
       FilesIO
       Graph
       LayoutHexSVG

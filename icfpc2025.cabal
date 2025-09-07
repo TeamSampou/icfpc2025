@@ -31,12 +31,14 @@ library
   exposed-modules:
       Base
       Client
+      ClientWrapper
       FilesIO
       Graph
       Graph.Z3
       LayoutHexSVG
       Lib
       ObservationSummary
+      TypesJSON
   other-modules:
       Paths_icfpc2025
   hs-source-dirs:

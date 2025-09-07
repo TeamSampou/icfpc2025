@@ -92,6 +92,25 @@ enumGraph numRooms trie = do
              return idx
         ]
 
+-- | enumGraph の結果から問題が解き切れているかを判定する
+--   判定は以下
+--   1. enumGraph の結果が 1 個
+--   2. そのグラフの頂点数が部屋数に等しい
+--   3. 全ての部屋の 6 つのドアが埋まっている
+--   4. room1 のドア d が room2 に繋がっているなら、room2 のドア d も room1 に繋がっている
+isComplete :: Int -- ^ num of rooms
+           -> [(DiGraph, RoomIndex)] -- ^ enumGraph の結果
+           -> Bool
+isComplete numRooms [(g, _)] = V.length g == numRooms &&
+                               all (\(_, outs) -> IntMap.size outs == 6) (V.toList g) &&
+                               and [ not (IntMap.lookup d outs1 == Just room2) || IntMap.lookup d outs2 == Just room1 -- P => Q は not P or Q と同値
+                                   | (room1, (_, outs1)) <- zip [0..] (V.toList g) -- room1 から room2 への辺を調べる
+                                   , (room2, (_, outs2)) <- zip [0..] (V.toList g) -- room2 から room1 への辺を調べる
+                                   , room1 <= room2 -- 対称性を利用して計算量削減
+                                   , d <- [0..5]     -- ドア番号
+                                   ]
+isComplete _        _        = False
+
 fromLayout :: Layout -> (DiGraph, RoomIndex)
 fromLayout (labels, startingRoom, ds) = (V.fromList m, startingRoom)
   where

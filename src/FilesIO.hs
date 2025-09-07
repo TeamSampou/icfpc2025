@@ -55,8 +55,8 @@ setupSolutionsDir = do
 writeExplores :: Show a => a -> LB.ByteString -> IO ()
 writeExplores plans results = do
   (dir, name) <- setupExploresDir
-  writeFile (dir </> name <.> "plans") (show plans <> "\n")
-  LB.writeFile (dir </> name <.> "results") (results <> "\n")
+  appendFile (dir </> name <.> "plans") (show plans <> "\n")
+  LB.appendFile (dir </> name <.> "results") (results <> "\n")
 
 writeSolutions :: J.ToJSON a => a -> LB.ByteString -> IO ()
 writeSolutions guessMap resp = do

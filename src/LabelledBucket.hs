@@ -9,7 +9,6 @@ import Data.List
 import Data.String
 import Data.Word
 import Data.Array.IO
-import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Map (Map)
 import Data.Map.Strict qualified as Map
@@ -56,7 +55,7 @@ plength (P ds) = length ds
 
 -- 部分的な部屋の情報
 --   ドアを開けた先のラベル
-type PRoom = Set (Door', Label)
+type PRoom = Map Door' Label
 
 noOpenDoors :: PRoom
 noOpenDoors = mempty
@@ -114,7 +113,7 @@ addDoor_
   :: Plan' -> Door' -> Label
   -> PRooms -> PRooms
 addDoor_ path door doorL =
-  Map.insertWith Set.union path (Set.singleton (door, doorL))
+  Map.insertWith Map.union path (Map.singleton door  doorL)
 
 addDoor
   :: (String -> IO ())
@@ -162,7 +161,7 @@ recExploreIO  putLog  bucket = rec_
 reduceUniqueLabels_ :: PRooms -> PRooms
 reduceUniqueLabels_ prs = prs1
   where (plans, rs) = unzip $ Map.toList prs
-        u = Set.unions rs
+        u = Map.unions rs
         prs1 = Map.fromList [(plan, u) | plan <- plans]
 
 reduceUniqueLabels
@@ -179,7 +178,7 @@ reduceUniqueLabels _putLog bucket = do
 * 全てのドアの先のラベルを確認した部屋のみを列挙
  -}
 filledRooms_ :: PRooms -> PRooms
-filledRooms_ = Map.filter ((== 6). Set.size)
+filledRooms_ = Map.filter ((== 6). Map.size)
 
 filledRooms :: CandBucket -> IO [(Label, PRooms)]
 filledRooms bucket = do
@@ -301,13 +300,15 @@ getLayout srcs rooms = do
 
 type Problem = (String, Int)
 
-probatio, primus, secundus, tertius
+probatio, primus, secundus, tertius, quartus, quintus
   :: Problem
 
 probatio  = ("probatio"  ,   3)
 primus    = ("primus"    ,   6)
 secundus  = ("secundus"  ,  12)
 tertius   = ("tertius"   ,  18)
+quartus   = ("quartus"   ,  24)
+quintus   = ("quintus"   ,  30)
 
 -----
 

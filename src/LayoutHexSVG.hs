@@ -1,12 +1,17 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module LayoutHexSVG
   ( layoutToSVGFile
+  , guessToSVGFile
   ) where
 
+import Data.Aeson (eitherDecode)
 import Data.List (intercalate, foldl')
 import Numeric   (showFFloat)
+import qualified Data.ByteString.Lazy as BL
+import System.Exit (die)
 
 import Base (Layout, RoomLabel, RoomIndex, Door)
+import TypesJSON
 
 -- 2D ベクトル
 type V2 = (Double, Double)
@@ -224,7 +229,7 @@ layoutToSVG initRadius rad margin iters (labels, _start, edges) =
       placed0 = runLayout p ers p0
       placed1 = relaxByEdges rad 100 0.25 edges placed0
 
-      scaleTarget = idealLen * 3.6
+      scaleTarget = idealLen * 7.0 -- 3.6
       (centers, w0, h0) = scaleAndPad margin scaleTarget placed1
       w = w0 + margin; h = h0 + margin
       centersI = zip [0..] centers
@@ -385,9 +390,24 @@ scaleAndPad pad scaleTarget ps =
 
 layoutToSVGFile :: FilePath -> Layout -> IO ()
 layoutToSVGFile path layout = do
-  let rad = 36
+  let rad = 26
   let svg = layoutToSVG (6*rad) rad 140 420 layout
   writeFile path svg
+
+
+guessRequestMapToLayout :: GuessRequestMap -> Layout
+guessRequestMapToLayout (GuessRequestMap roomLabels startingRooms connects)
+  = (roomLabels, startingRooms, [ ((a,b),(c,d)) | (Connection (RoomDoor a b) (RoomDoor c d)) <- connects ])
+
+
+guessToSVGFile :: FilePath -> IO ()
+guessToSVGFile fp = do
+  bs <- BL.readFile fp -- "solutions/secundus/07-2041.guess"
+  case eitherDecode bs of
+    Left err -> die $ "JSON decode error: " ++ err
+    Right guessRequestMap -> do
+      let layout = guessRequestMapToLayout guessRequestMap
+      layoutToSVGFile "guess_layout.svg" layout
 
 --------------------------------------------------------------------------------
 -- 例 & 実行

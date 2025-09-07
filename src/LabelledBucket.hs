@@ -230,13 +230,15 @@ plansPrefixNotSrc bdepth rooms = do
 
 -----
 
+debug :: Bool
+debug = False
+
 type LayoutConn = ((RoomIndex, Base.Door), (RoomIndex, Base.Door))
 
-getLayout :: Int -> [Plan'] -> [(RoomIndex, Label, (PRoom, [Plan']))] -> IO Layout
-getLayout size srcs rooms = do
+getLayout :: [Plan'] -> [(RoomIndex, Label, (PRoom, [Plan']))] -> IO Layout
+getLayout srcs rooms = do
   putStrLn ""
   putStr $ unlines [pprByRoom ix lb room | (ix, lb, room) <- rooms]
-  checkWithSize size rooms
 
   putStr $ unlines $
     ("by-plan" :)
@@ -247,21 +249,41 @@ getLayout size srcs rooms = do
   putStr $ unlines $
     "self connections:" :
     ["  " <> show s | s <- selfs]
+  when debug $ do
+    putStr $ unlines $
+      "rlts:" :
+      ["  " <> show s | s <- rlts]
+    putStr $ unlines $
+      "rgts:" :
+      ["  " <> show s | s <- rgts]
+  printCount "eqs" eqs
+  printCount "lts" lts
+  printCount "gts" gts
   putStr $ unlines $
     "mutial connections:" :
     ["  " <> show s | s <- mutuals]
+
   pure (roomsLb, startIx, selfs ++ mutuals)
   where roomsLb = [fromIntegral lb | (_, L lb, _)<- rooms]
         (startIx, _, _) = byPlan <!> P []
 
-        selfs = [((si, door), (di, door)) | ((si, di, door), _) <- oneways, si == di] :: [LayoutConn]
+        selfs = [((si, door), (di, door)) | (si, di, door) <- eqs]
         mutuals =
-          [ ((si, door), (di, partner))
-          | ((si, di, door), _) <- oneways
-          , si < di
-          , let partner = largers <!> (di, si)
-          ] :: [LayoutConn]
-        largers = Map.fromList [((si, di), door) | ((si, di, door), _) <- oneways, si > di]
+          [ eqassert sl dg dl sg ((sl, doorl), (sg, doorg))
+          | (sl, dl, doorl) <- lts
+          | (dg, sg, doorg) <- gts
+          ]
+        eqassert sl dg dl sg x
+          | sl == dg && dl == sg  = x
+          | otherwise             = error $ "inconsistent: " ++ show (sl, dl) ++ " =/= " ++ show (sg, dg)
+
+        printCount tag xs = putStrLn $ tag ++ ": " ++ show (length xs)
+        eqs = [t | (t@(si, di, _door), _) <- oneways, si == di]
+        rlts = [t | (t@(si, di, _door), _) <- oneways, si < di]
+        lts = usort rlts
+        rgts = [(di, si, door) | ((si, di, door), _) <- oneways, si > di]
+        gts = usort rgts
+        usort = Set.toList . Set.fromList
         oneways =
           [ ((si, di, fromIntegral dw), (src, dst))
           | src <- srcs
@@ -323,10 +345,10 @@ solveBF Driver{..} (prob, size) ename bdepth = do
 
   checkWithSize size rooms2
   let srcs = [P p | sz <- [0 .. bdepth - 2], p <- replicateM sz allDoors]
-  (,) <$> getLayout size (srcs ++ asrcs) rooms2 <*> pure qc
+  (,) <$> getLayout (srcs ++ asrcs) rooms2 <*> pure qc
 
 solveFromResult :: Int -> [String] -> Int -> [ResultI] -> IO Layout
-solveFromResult size plans bdepth resultsI = do
+solveFromResult _size plans bdepth resultsI = do
   bucket <- newCandBucket
   let run plan = runExploreIO (\_ -> pure ()) bucket (fromString plan)
       results = [map fromIntegral ri | ri <- resultsI]
@@ -336,7 +358,7 @@ solveFromResult size plans bdepth resultsI = do
   fillss <- byRooms bucket
 
   let srcs = [P p | sz <- [0 .. bdepth - 2], p <- replicateM sz allDoors]
-  getLayout size srcs fillss
+  getLayout srcs fillss
 
 -----
 

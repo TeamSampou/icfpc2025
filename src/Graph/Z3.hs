@@ -34,38 +34,41 @@ findGraph numRooms t = Z3.evalZ3 $ findGraph' numRooms t
 
 findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> Trie.ObservationSummary -> z3 (Maybe (Graph.DiGraph, RoomIndex))
 findGraph' numRooms t = do
-  -- Finite-domain sort は Array の index に使うとまずいらしく、うまく機能しないので、代わりに Int を用いる
-  let useIntSort = True
-
-  sRoom <-
-    if useIntSort then do
-      Z3.mkIntSort
-    else do
-      symRoom <- Z3.mkStringSymbol "Room"
-      Z3.mkFiniteDomainSort symRoom (fromIntegral numRooms)
+  symRoom <- Z3.mkStringSymbol "Room"
+  sRoom <- Z3.mkFiniteDomainSort symRoom (fromIntegral numRooms)
   rooms <- forM [0..numRooms-1] $ \i -> Z3.mkInt i sRoom
   let startingRoom = rooms !! 0
 
   doorFuncs <- forM [(0::Int)..5] $ \d -> do
     sym <- Z3.mkStringSymbol ("d" ++ show d)
-    func <- Z3.mkFuncDecl sym [sRoom] sRoom
-    when useIntSort $ do
-      forM_ rooms $ \r -> do
-        r2 <- Z3.mkApp func [r]
-        lb <- Z3.mkInt 0 sRoom
-        ub <- Z3.mkInt (numRooms - 1) sRoom
-        Z3.solverAssertCnstr =<< Z3.mkLe lb r2
-        Z3.solverAssertCnstr =<< Z3.mkLe r2 ub
-    return func
+    Z3.mkFuncDecl sym [sRoom] sRoom
 
   sLabel <- Z3.mkBvSort 2
-  sLabelArray <- Z3.mkArraySort sRoom sLabel
-  symStartingLabels <- Z3.mkStringSymbol "starting_labels"
-  startingLabels <- Z3.mkVar symStartingLabels sLabelArray
+  startingLabels <- forM [0..numRooms-1] $ \i -> do
+    sym <- Z3.mkStringSymbol $ "starting_label_" ++ show i
+    Z3.mkVar sym sLabel
 
-  let f :: Seq Action -> Z3.AST -> Z3.AST -> Trie.ObservationSummary -> z3 ()
+
+  -- Finite-domain sort は Array の index に使うとうまく機能しないので、代わりに場合分けで書く
+  let select :: [Z3.AST] -> Z3.AST -> z3 Z3.AST
+      select xs key = do
+        foldM (\expr i -> do
+                  iExpr <- Z3.mkInt i sRoom
+                  cond <- Z3.mkEq key iExpr
+                  Z3.mkIte cond (xs !! i) expr)
+              (xs !! (numRooms - 1))
+              [numRooms-2, numRooms-3 .. 0]
+
+      store :: [Z3.AST] -> Z3.AST -> Z3.AST -> z3 [Z3.AST]
+      store xs key val = do
+        forM (zip [0..] xs) $ \(i,x) -> do
+          iExpr <- Z3.mkInt i sRoom
+          cond <- Z3.mkEq key iExpr
+          Z3.mkIte cond val x
+
+  let f :: Seq Action -> Z3.AST -> [Z3.AST] -> Trie.ObservationSummary -> z3 ()
       f hist currentRoom currentLabels (Trie.Node label childrenD childrenL) = do
-        currentLabelVar <- Z3.mkSelect currentLabels currentRoom
+        currentLabelVar <- select currentLabels currentRoom
         currentLabelVal <- Z3.mkInt label sLabel
         Z3.solverAssertCnstr =<< Z3.mkEq currentLabelVar currentLabelVal
         -- tmp <- Z3.astToString =<< Z3.mkEq currentLabelVar currentLabelVal
@@ -77,7 +80,7 @@ findGraph' numRooms t = do
 
         forM_ (IntMap.toList childrenL) $ \(l, ch) -> do
           newLabelVal <- Z3.mkInt l sLabel
-          newLabels <- Z3.mkStore currentLabels currentRoom newLabelVal
+          newLabels <- store currentLabels currentRoom newLabelVal
           f (hist Seq.|> AlterLabel l) currentRoom newLabels ch
 
   f Seq.empty startingRoom startingLabels t
@@ -94,8 +97,7 @@ findGraph' numRooms t = do
     g <- fmap V.fromList $ forM [0..numRooms-1] $ \r -> do
       let room = rooms !! r
 
-      labelExpr <- Z3.mkSelect startingLabels room
-      label <- fmap (fromIntegral . fromJust) $ Z3.evalInt m labelExpr
+      label <- fmap (fromIntegral . fromJust) $ Z3.evalInt m (startingLabels !! r)
 
       outEdges <- fmap IntMap.fromList $ forM (zip [0..] doorFuncs) $ \(door, df) -> do
         destExpr <- Z3.mkApp df [room]

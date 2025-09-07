@@ -64,7 +64,7 @@ step p es ps =
         foldl' (+^) (0,0)
           [ let d    = pj -^ pi
                 dist = norm d
-                rest = 0.6 * minSep p
+                rest = 1.10 * minSep p
                 pull = (kSpring p * (dist - rest)) *^ unit d
             in pull
           | (u,v) <- es, i == u || i == v
@@ -95,10 +95,10 @@ relaxByEdges
 relaxByEdges rad iters stepSz edges0 pos0 = go iters pos0
   where
     n        = length pos0
-    minSep'  = 2*rad + 0.15*rad
-    kTension = 1.0
-    kRepE    = 0.9
-    kGrav    = 0.008
+    minSep'  = 2*rad + 0.3*rad  -- 最小分離距離（安全マージン込み）
+    kTension = 0.6              -- 線の張力係数（大きいほど縮む）
+    kRepE    = 1.2              -- 近距離反発係数（大きいほど離れる）
+    kGrav    = 0.0              -- 中心寄せ係数（大きいほど中央に寄る）
 
     clamp v =
       let m = norm v
@@ -223,11 +223,11 @@ layoutToSVG initRadius rad margin iters (labels, _start, edges) =
       idealLen  = 3.2 * rad
       p = ForceParams { steps=iters, temp0=idealLen*0.45, cool=0.96
                       , kRep=(idealLen*idealLen)*0.08, kSpring=0.25
-                      , gravity=0.015, minSep=2*rad+0.4*rad }
+                      , gravity=0.000, minSep=2*rad+0.4*rad }
       p0      = initialOnCircle n initRadius
       ers     = [ (ri,rj) | ((ri,_),(rj,_)) <- edges, ri /= rj ]
       placed0 = runLayout p ers p0
-      placed1 = relaxByEdges rad 100 0.25 edges placed0
+      placed1 = relaxByEdges rad 60 0.12 edges placed0
 
       scaleTarget = idealLen * 7.0 -- 3.6
       (centers, w0, h0) = scaleAndPad margin scaleTarget placed1
@@ -438,5 +438,5 @@ example =
 main :: IO ()
 main = do
   let rad = 36
-  let svg = layoutToSVG (6*rad) rad 140 420 example
+  let svg = layoutToSVG (9*rad) rad 140 420 example
   writeFile "layout.svg" svg

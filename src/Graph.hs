@@ -119,7 +119,7 @@ toLayout (g, startingRoom) =
   where
     numRooms = V.length g
 
-    -- (room1, room2) ↦ { d | room1 のドア d が room 2 に繋がっている }
+    -- (room1, room2) ↦ { d | room1 のドア d が room2 に繋がっている }
     cs :: Map (RoomIndex,RoomIndex) IntSet
     cs = Map.fromListWith IntSet.union [((room1, room2), IntSet.singleton d) | (room1, (_, outs)) <- zip [0..] (V.toList g), (d, room2) <- IntMap.toList outs]
 

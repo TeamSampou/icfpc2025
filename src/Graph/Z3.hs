@@ -34,14 +34,29 @@ findGraph numRooms t = Z3.evalZ3 $ findGraph' numRooms t
 
 findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> Trie.ObservationSummary -> z3 (Maybe (Graph.DiGraph, RoomIndex))
 findGraph' numRooms t@(Trie.Node startingRoomLabel _ _) = do
-  symRoom <- Z3.mkStringSymbol "Room"
-  sRoom <- Z3.mkFiniteDomainSort symRoom (fromIntegral numRooms)
+  -- Finite-domain sort は振る舞いが怪しいので代わりにIntを用いる
+  let useIntSort = True
+
+  sRoom <-
+    if useIntSort then do
+      Z3.mkIntSort
+    else do
+      symRoom <- Z3.mkStringSymbol "Room"
+      Z3.mkFiniteDomainSort symRoom (fromIntegral numRooms)
   rooms <- forM [0..numRooms-1] $ \i -> Z3.mkInt i sRoom
   let startingRoom = rooms !! 0
 
   doorFuncs <- forM [(0::Int)..5] $ \d -> do
     sym <- Z3.mkStringSymbol ("d" ++ show d)
-    Z3.mkFuncDecl sym [sRoom] sRoom
+    func <- Z3.mkFuncDecl sym [sRoom] sRoom
+    when useIntSort $ do
+      forM_ rooms $ \r -> do
+        r2 <- Z3.mkApp func [r]
+        lb <- Z3.mkInt 0 sRoom
+        ub <- Z3.mkInt (numRooms - 1) sRoom
+        Z3.solverAssertCnstr =<< Z3.mkLe lb r2
+        Z3.solverAssertCnstr =<< Z3.mkLe r2 ub
+    return func
 
   sLabel <- Z3.mkBvSort 2
   let fixedLabels = startingRoomLabel : IntSet.toList (IntSet.delete startingRoomLabel (Trie.collectUnmodifiedLabels t))

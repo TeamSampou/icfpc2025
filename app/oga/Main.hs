@@ -29,7 +29,7 @@ main =  do
 
 
 -- | 部屋ラベルと部屋までの道のり(プラン)
-type RoomP  = (RoomLabel, Plan)
+type RoomP  = (RoomLabel, ParsedPlan)
 
 -- | ドアは全部開いたが, まだ部屋番号(RoomIndex)が確定していない部屋データ
 type RoomRaw = (RoomP, [(Door, RoomP)])
@@ -39,7 +39,7 @@ data RoomF = RoomF
   { rfLabel :: Int
   , rfDoors :: [(Door, RoomP)]
   , rfIndex :: RoomIndex
-  , rfPlan  :: Plan
+  , rfPlan  :: ParsedPlan
   } deriving Show
 
 -- | 隣接する部屋の番号も確定した部屋データ.
@@ -48,7 +48,7 @@ data RoomZ = RoomZ
   { rzLabel :: Int
   , rzDoors :: [((Door, RoomP), RoomIndex)]
   , rzIndex :: RoomIndex
-  , rzPlan  :: Plan
+  , rzPlan  :: ParsedPlan
   } deriving Show
 
 -- | 部屋番号を確定する
@@ -74,7 +74,7 @@ fixToZRoom room doors =
 
 solve :: Int -> IO [RoomZ]
 solve limit = do
-    (_,fixRooms,zRooms) <- solve' limit [] [] (0,"")
+    (_,fixRooms,zRooms) <- solve' limit [] [] (0, [AlterLabel 1])
     mapM_ print fixRooms
     mapM_ print zRooms
     return zRooms
@@ -88,7 +88,7 @@ solve'
     -> IO (RoomIndex, [RoomF], [RoomZ])  -- ^ 対象部屋の番号と更新された部屋情報
 solve' 0       _       _       _       = error "limit reached, abort."
 solve' limit  fixRooms zRooms (_,plan) = do
-    putStrLn $ "count " ++ show limit ++ ", fixRooms=" ++ show(length fixRooms) ++ ", zRooms=" ++ show(length zRooms) ++ ", plan=" ++ plan
+    putStrLn $ "count " ++ show limit ++ ", fixRooms=" ++ show(length fixRooms) ++ ", zRooms=" ++ show(length zRooms) ++ ", plan=" ++ renderPlan plan
     -- とりあえず全部のドアを開ける
     raw@(_room, neighbors) <- openAllDoor plan
     -- ドアパターンを既知の部屋を比較して部屋番号を確定する
@@ -131,16 +131,16 @@ calcDoorPair rooms =
                           in go (((r1,d),(r2,c)):acc) (xs++ys)
 
 
-allDoors :: [Plan]
-allDoors = ["0","1","2","3","4","5"]
+allDoors :: ParsedPlan
+allDoors = [ PassDoor i | i<-[0..5]]
 
 -- | プランで辿りつく部屋の全部のドアを開けるだけ
-openAllDoor :: Plan -> IO RoomRaw
+openAllDoor :: ParsedPlan -> IO RoomRaw
 openAllDoor plan = do
-    (rss, _count) <- explore (map (plan++) allDoors)
+    (rss, _count) <- explore [ renderPlan(plan++[door]) | door <-allDoors]
     let len = length plan
         label = head $ drop len $ head rss
-    return ((label,plan), [(i, (r, plan++show i)) | (i,r)<- zip [0..] [ last rs | rs <-rss]] )
+    return ((label,plan), [(i, (r, plan++[PassDoor i])) | (i,r)<- zip [0..] [ last rs | rs <-rss]] )
 
 
 -- | 既知の部屋リストを更新つつ, 対象の部屋の番号を確定する

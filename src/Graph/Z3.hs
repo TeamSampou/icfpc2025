@@ -2,38 +2,29 @@ module Graph.Z3
   ( findGraph
   ) where
 
-import Control.Exception (assert)
 import Control.Monad
-import Control.Monad.State
-import qualified Data.Foldable as F
-import Data.Function (on)
-import Data.IntMap.Strict (IntMap)
+import Control.Monad.Trans
 import qualified Data.IntMap.Strict as IntMap
-import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-import Data.List (groupBy, intercalate, nubBy, sort)
-import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import Data.IORef
+import Data.List (elemIndex)
 import Data.Maybe (fromJust)
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
-import Data.Text (Text)
-import qualified Data.Text as T
-import Data.Vector (Vector)
 import qualified Data.Vector as V
 import qualified Z3.Monad as Z3
 
 import Base
-import qualified Graph as Graph
-import ObservationSummary (ObservationSummary, Trie)
+import Graph (DiGraph)
+import ObservationSummary (ObservationSummary, Trie (..))
 import qualified ObservationSummary as Trie
 
 
-findGraph :: Int -> Trie.ObservationSummary -> IO (Maybe (Graph.DiGraph, RoomIndex))
+findGraph :: Int -> ObservationSummary -> IO (Maybe (DiGraph, RoomIndex))
 findGraph numRooms t = Z3.evalZ3 $ findGraph' numRooms t
 
-findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> Trie.ObservationSummary -> z3 (Maybe (Graph.DiGraph, RoomIndex))
-findGraph' numRooms t@(Trie.Node startingRoomLabel _ _) = do
+findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe (DiGraph, RoomIndex))
+findGraph' numRooms t@(Node startingRoomLabel _ _) = do
   -- Finite-domain sort は振る舞いが怪しいので代わりにIntを用いる
   let useIntSort = True
 
@@ -81,6 +72,23 @@ findGraph' numRooms t@(Trie.Node startingRoomLabel _ _) = do
   forM_ [length fixedLabels .. numRooms - 2] $ \i -> do
     Z3.solverAssertCnstr =<< Z3.mkBvule (startingLabels !! i) (startingLabels !! (i+1))
 
+  -- Trieをトラバースして、各ラベルについて最初に見つかった頂点は、ラベルを固定した部屋だとしても一般性を失わない
+  do seenLabelsRef <- liftIO $ newIORef (IntSet.singleton startingRoomLabel)
+     let preprocess :: Z3.AST -> ObservationSummary -> z3 ()
+         preprocess currentRoom (Node label childrenD _childrenL) = do
+           seenLabels <- liftIO $ readIORef seenLabelsRef
+           unless (label `IntSet.member` seenLabels) $ do
+             case elemIndex label fixedLabels of
+               Nothing -> pure ()
+               Just i -> do
+                 iExpr <- Z3.mkInt i sRoom
+                 Z3.solverAssertCnstr =<< Z3.mkEq currentRoom iExpr
+             liftIO $ writeIORef seenLabelsRef (IntSet.insert label seenLabels)
+           forM_ (IntMap.toList childrenD) $ \(d, ch) -> do
+             newRoom <- Z3.mkApp (doorFuncs !! d) [currentRoom]
+             preprocess newRoom ch
+     preprocess startingRoom t
+
   -- Finite-domain sort は Array の index に使うとうまく機能しないので、代わりに場合分けで書く
   let select :: [Z3.AST] -> Z3.AST -> z3 Z3.AST
       select xs key = do
@@ -98,8 +106,8 @@ findGraph' numRooms t@(Trie.Node startingRoomLabel _ _) = do
           cond <- Z3.mkEq key iExpr
           Z3.mkIte cond val x
 
-  let f :: Seq Action -> Z3.AST -> [Z3.AST] -> Trie.ObservationSummary -> z3 ()
-      f hist currentRoom currentLabels (Trie.Node label childrenD childrenL) = do
+  let f :: Seq Action -> Z3.AST -> [Z3.AST] -> ObservationSummary -> z3 ()
+      f hist currentRoom currentLabels (Node label childrenD childrenL) = do
         currentLabelVar <- select currentLabels currentRoom
         currentLabelVal <- Z3.mkInt label sLabel
         Z3.solverAssertCnstr =<< Z3.mkEq currentLabelVar currentLabelVal

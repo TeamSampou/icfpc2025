@@ -33,8 +33,9 @@ library
       Client
       FilesIO
       Graph
-      Lib
+      Graph.Z3
       LayoutHexSVG
+      Lib
       ObservationSummary
   other-modules:
       Paths_icfpc2025

@@ -44,14 +44,14 @@ True
 ```
 ghci> initClient
 ghci> select "primus"
-ghci> plan <- (withSystemRandom $ \gen -> randomWalk gen (maxPlan 6) :: IO Plan)
+ghci> plan <- (withSystemRandom $ \gen -> randomWalk gen (maxPlan 6) :: IO Plan)  -- This '6' means a number of doors which any room has.
 ghci> plan
 "021320403505044123550520034431312210134541025332505010033554343013423011254052531011533004340304253205132534"
 ghci> ([result],qc) <- explore [plan]
 ghci> result
 [0,0,3,0,0,3,3,3,3,2,3,3,1,2,3,3,0,3,2,3,1,2,3,2,0,0,0,2,3,2,0,0,0,0,0,0,0,0,0,2,3,3,0,1,1,1,0,0,3,1,2,3,3,0,1,1,1,0,0,0,2,1,1,1,1,1,0,2,1,1,1,1,2,1,1,1,2,3,2,3,2,0,1,2,0,0,0,0,1,1,3,2,3,3,2,0,2,1,1,0,3,3,1,1,0,3,1,1,1]
 ghci> let t = ObservationSummary.fromObservation plan result
-ghci> length $ Graph.enumGraph 6 t
+ghci> length $ Graph.enumGraph 6 t -- This 6 means a number of rooms of problem "primus". You must modify it if you select another one.
 8
 ghci> plan2 <- (withSystemRandom $ \gen -> randomWalk gen (maxPlan 6) :: IO Plan)
 ghci> plan2

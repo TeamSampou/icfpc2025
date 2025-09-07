@@ -2,14 +2,18 @@
 
 module FilesIO where
 
+import Data.Functor
+import Data.IORef
 import Data.ByteString.Lazy qualified as LB
 import Data.ByteString.Lazy.Char8 qualified as L8
 import Data.Time (defaultTimeLocale, formatTime, getZonedTime)
 import System.FilePath ((</>), (<.>))
-import System.Directory
+import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.IO (withFile, IOMode (ReadMode), hGetLine)
 
 import qualified Data.Aeson as J
+
+import TypesJSON (ExploreResponse (..))
 
 timestamp :: IO String
 timestamp =
@@ -84,7 +88,9 @@ readExplores :: String -> IO ([[String]], [LB.ByteString])
 readExplores name = do
   let plansPath = exploresDir </> name <.> "plans"
       resultsPath = exploresDir </> name <.> "results"
+  putStrLn $ "loading " ++ plansPath
   plans <- map read . lines <$> readFile plansPath
+  putStrLn $ "loading " ++ resultsPath
   results <- L8.lines <$> LB.readFile resultsPath
   pure (plans, results)
 
@@ -96,3 +102,29 @@ readSolutions name = do
   guess <- decode' =<< LB.readFile guessPath
   resp <- LB.readFile respPath
   pure (guess, resp)
+
+getExploreReplay :: IO (String -> String -> IO String, [String] -> IO ([[Int]], Int))
+getExploreReplay = do
+  nameRef <- newIORef ("unknown", "<no-name>")
+  dref <- newIORef ([], [])
+  let eselect prob ename = do
+        let name = prob </> ename
+        (plansList, resListBS) <- readExplores name
+        let decode' bs = do
+              ExploreResponse rs qc <- maybe (fail $ "decode error: " ++ name) pure $ J.decode bs
+              pure (rs, qc)
+        resultsList <- mapM decode' resListBS
+        writeIORef dref (plansList, resultsList)
+        writeIORef nameRef (prob, ename)
+        pure prob
+  let eexplore plans = do
+        (planss, resultss) <- readIORef dref
+        let getResults nplanss = case resultss of
+              []              -> fail "replay: no left plans"
+              rs : nresultss  -> writeIORef dref (nplanss, nresultss) $> rs
+        case planss of
+          []               -> fail "replay: no left plans"
+          ps : nplanss
+            | ps /= plans  -> fail $ "inconsistent: " ++ show ps ++ " =/= " ++ show plans
+            | otherwise    -> getResults nplanss
+  pure (eselect, eexplore)

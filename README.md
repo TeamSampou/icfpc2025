@@ -22,6 +22,18 @@ This is Team Sampou's repository for the [ICFP Programming Contest 2025](http://
 
 * [Z3](https://github.com/Z3Prover/z3)
 
+## Approaches
+
+We employed several independent approaches.
+
+### 1. Systematic exploration through repeated calls to `/explore`
+
+### 2. Constraint-solving approach
+
+In this approach, we execute `/explore` with one or several random walks of the maximum permitted length, and then summarize the observation as a trie (see [src/ObservationSummary.hs](src/ObservationSummary.hs)) and solve a constraint satisfaction problem to synthesize a room layout that is consistent with the observation.
+
+Initially, we explored the search space using backtracking (see `enumGraph` in [src/Graph.hs](src/Graph.hs)), but later we employed the SMT solver [Z3](https://github.com/Z3Prover/z3) (see [src/Graph/Z3.hs](src/Graph/Z3.hs)).
+
 ## Usage
 
 Prepare `.env` file with the following content:
@@ -29,6 +41,10 @@ Prepare `.env` file with the following content:
 ```
 ID="..."
 ```
+
+### 1. Systematic exploration through repeated calls to `/explore`
+
+### 2. Constraint-solving approach
 
 Run `stack repl`.
 

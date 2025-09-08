@@ -2,17 +2,17 @@
 module Main where
 
 import Control.Monad (when, replicateM)
-import Data.List
 import Data.Foldable (foldrM)
 import Data.Function (on)
+import Data.List ( find, groupBy, nubBy, sort, sortBy, transpose )
 import Data.Maybe (catMaybes, fromJust, maybeToList)
-import Debug.Trace
 import Data.Tuple (swap)
-import System.Environment
+import Debug.Trace ( traceShow )
+import System.Environment ( getArgs, getProgName )
 import qualified System.Random.MWC as Rand
 
 import Base
-import Client
+import Client ( initClient, select, explore, guess )
 
 
 main :: IO ()
@@ -82,10 +82,12 @@ solve limit  = do
     -- XXX これはダメ. 最初の部屋も重複しているので真に元に戻ってるかどうか分からない
     let (f,b) = findPath (floor $ fromIntegral(length zRooms)*1.5) conn
     fb' <- withAlterLabel (f++b)
+    -- ラベル書き換えの固定プランをプレフィックスとして２回目を解く
     (_,fixRooms2,zRooms2) <- solve' limit [] [] (0, fb')
     mapM_ print fixRooms2
     mapM_ print zRooms2
     when (null zRooms2) $ fail "Failed(2)."
+    -- 元のラベルがよくわからんので再取得
     labels <- checkOrigLabel zRooms2
     return $ formatAnswer zRooms2 labels
 
@@ -130,7 +132,7 @@ findPath n conn = let (xs,ys) = unzip [(PassDoor d1, PassDoor d2) | (d1,d2) <-re
         go 0 _    _ acc = [acc]
         go k css r1 acc =
             let Just cs = find((==r1).fst.fst.head) css
-            in [ (r2, (d1,d2):acc) | ((_,d1),(r2,d2)) <-cs, traceShow((r1,d1),(r2,d2))True, r1 /= r2 && (d1,d2)`notElem`acc ]
+            in [ (r2, (d1,d2):acc) | ((_,d1),(r2,d2)) <-cs, r1 /= r2 && (d1,d2)`notElem`acc ]
                >>= uncurry (go (k-1) css)
 
 
@@ -152,8 +154,7 @@ calcDoorPair rooms =
         go acc []     = acc
         go acc (((r1,r2),d):rests) 
             | r1 == r2  = go (((r1,d),(r1,d)):acc) rests
-            | otherwise = traceShow (r1,r2,d,rests) $
-                          let (xs,((_,_),c):ys) = break (\((a,b),_)-> r1==b && r2==a) rests
+            | otherwise = let (xs,((_,_),c):ys) = break (\((a,b),_)-> r1==b && r2==a) rests
                           in go (((r1,d),(r2,c)):acc) (xs++ys)
 
 
@@ -165,6 +166,8 @@ withAlterLabel plan = do
     alters<- fmap (map AlterLabel) $ replicateM (length plan) (Rand.uniformR (0::RoomLabel, 3) gen)
     return $ (a:) $ concat $ transpose [plan, alters]
 
+
+-- | 固定プランプレフィックスからラベル書き換え操作を除外して, 元のラベルを確認する
 checkOrigLabel :: [RoomZ] -> IO [RoomLabel]
 checkOrigLabel zrooms = do
     (rss,_) <- explore $ map renderPlan [[PassDoor d| PassDoor d <-plan] | plan<- map rzPlan $ sortBy(compare`on`rzIndex) zrooms]

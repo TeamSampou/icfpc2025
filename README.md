@@ -26,7 +26,7 @@ This is Team Sampou's repository for the [ICFP Programming Contest 2025](http://
 
 We employed several independent approaches.
 
-### Constraint-solving approach
+### Random-walk + Constraint-solving
 
 In this approach, we execute `/explore` with one or several random walks of the maximum permitted length, and then summarize the observation as a trie (see [src/ObservationSummary.hs](src/ObservationSummary.hs)) and solve a constraint satisfaction problem to synthesize a room layout that is consistent with the observation.
 

@@ -78,10 +78,11 @@ solve limit  = do
     mapM_ print zRooms
     when (null zRooms) $ fail "Failed(1)."
     let (_,_,conn) = formatAnswer zRooms [] --ダミー
-    -- 長さや部屋数の道をみつけて, 行きでラベルを書き換えて元に戻ってくるプランを作る
-    let (f,b) = findPath (length zRooms) conn
-    f' <- withAlterLabel f
-    (_,fixRooms2,zRooms2) <- solve' limit [] [] (0, f'++b)
+    -- 長さや部屋数の道をみつけて, 書き換えて元に戻ってくるプランを作る
+    -- XXX これはダメ. 最初の部屋も重複しているので真に元に戻ってるかどうか分からない
+    let (f,b) = findPath (floor $ fromIntegral(length zRooms)*1.5) conn
+    fb' <- withAlterLabel (f++b)
+    (_,fixRooms2,zRooms2) <- solve' limit [] [] (0, fb')
     mapM_ print fixRooms2
     mapM_ print zRooms2
     when (null zRooms2) $ fail "Failed(2)."

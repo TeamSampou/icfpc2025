@@ -4,6 +4,8 @@
 
 This is Team Sampou's repository for the [ICFP Programming Contest 2025](http://icfpcontest2025.github.io/).
 
+![](banner.svg)
+
 ## Members
 
 * [Katsutoshi Itoh](https://github.com/cutsea110)

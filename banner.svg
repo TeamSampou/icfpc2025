@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1002.40" height="908.71" viewBox="0 0 1002.40 908.71">
+<rect x="0" y="0" width="100%" height="100%" fill="white"/>
+<polygon points="526.05,364.94 548.57,351.94 548.57,325.94 526.05,312.94 503.54,325.94 503.54,351.94" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="526.05" y="342.44" font-size="10" text-anchor="middle" fill="#111">R0 / L0</text>
+<text x="545.48" y="366.34" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="559.49" y="335.82" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="540.07" y="308.42" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="506.63" y="311.54" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="492.62" y="342.06" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="512.04" y="369.46" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="328.06,306.02 350.58,293.02 350.58,267.02 328.06,254.02 305.54,267.02 305.54,293.02" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="328.06" y="283.52" font-size="10" text-anchor="middle" fill="#111">R1 / L1</text>
+<text x="347.48" y="307.42" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="361.50" y="276.90" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="342.08" y="249.51" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="308.64" y="252.63" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="294.62" y="283.14" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="314.04" y="310.54" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="684.43,207.31 706.95,194.31 706.95,168.31 684.43,155.31 661.92,168.31 661.92,194.31" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="684.43" y="184.81" font-size="10" text-anchor="middle" fill="#111">R2 / L2</text>
+<text x="703.86" y="208.71" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="717.87" y="178.19" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="698.45" y="150.79" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="665.01" y="153.91" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="651.00" y="184.43" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="670.42" y="211.83" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="379.33,654.71 401.85,641.71 401.85,615.71 379.33,602.71 356.82,615.71 356.82,641.71" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="379.33" y="632.21" font-size="10" text-anchor="middle" fill="#111">R3 / L3</text>
+<text x="398.75" y="656.11" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="412.77" y="625.59" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="393.35" y="598.20" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="359.91" y="601.32" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="345.90" y="631.83" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="365.32" y="659.23" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="722.40,376.04 744.92,363.04 744.92,337.04 722.40,324.04 699.88,337.04 699.88,363.04" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="722.40" y="353.54" font-size="10" text-anchor="middle" fill="#111">R4 / L0</text>
+<text x="741.82" y="377.43" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="755.84" y="346.92" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="736.42" y="319.52" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="702.98" y="322.64" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="688.96" y="353.16" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="708.38" y="380.55" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="262.27,493.31 284.78,480.31 284.78,454.31 262.27,441.31 239.75,454.31 239.75,480.31" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="262.27" y="470.81" font-size="10" text-anchor="middle" fill="#111">R5 / L0</text>
+<text x="281.69" y="494.71" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="295.70" y="464.19" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="276.28" y="436.79" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="242.84" y="439.91" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="228.83" y="470.43" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="248.25" y="497.83" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="140.00,332.45 162.52,319.45 162.52,293.45 140.00,280.45 117.48,293.45 117.48,319.45" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="140.00" y="309.95" font-size="10" text-anchor="middle" fill="#111">R6 / L1</text>
+<text x="159.42" y="333.84" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="173.44" y="303.33" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="154.02" y="275.93" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="120.58" y="279.05" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="106.56" y="309.57" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="125.98" y="336.96" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="304.83,173.47 327.35,160.47 327.35,134.47 304.83,121.47 282.32,134.47 282.32,160.47" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="304.83" y="150.97" font-size="10" text-anchor="middle" fill="#111">R7 / L1</text>
+<text x="324.25" y="174.87" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="338.27" y="144.35" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="318.85" y="116.96" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="285.41" y="120.08" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="271.40" y="150.59" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="290.82" y="177.99" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="496.21,166.00 518.72,153.00 518.72,127.00 496.21,114.00 473.69,127.00 473.69,153.00" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="496.21" y="143.50" font-size="10" text-anchor="middle" fill="#111">R8 / L2</text>
+<text x="515.63" y="167.40" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="529.64" y="136.88" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="510.22" y="109.48" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="476.78" y="112.60" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="462.77" y="143.12" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="482.19" y="170.52" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="429.44,277.76 451.96,264.76 451.96,238.76 429.44,225.76 406.92,238.76 406.92,264.76" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="429.44" y="255.26" font-size="10" text-anchor="middle" fill="#111">R9 / L2</text>
+<text x="448.86" y="279.16" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="462.88" y="248.64" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="443.46" y="221.25" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="410.02" y="224.37" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="396.00" y="254.88" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="415.42" y="282.28" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="360.57,433.92 383.09,420.92 383.09,394.92 360.57,381.92 338.06,394.92 338.06,420.92" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="360.57" y="411.42" font-size="10" text-anchor="middle" fill="#111">R10 / L3</text>
+<text x="380.00" y="435.32" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="394.01" y="404.80" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="374.59" y="377.40" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="341.15" y="380.52" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="327.14" y="411.04" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="346.56" y="438.44" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<polygon points="537.30,567.76 559.82,554.76 559.82,528.76 537.30,515.76 514.79,528.76 514.79,554.76" fill="white" stroke="#333" stroke-width="1.1"/>
+<text x="537.30" y="545.26" font-size="10" text-anchor="middle" fill="#111">R11 / L3</text>
+<text x="556.73" y="569.16" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">0</text>
+<text x="570.74" y="538.64" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">1</text>
+<text x="551.32" y="511.25" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">2</text>
+<text x="517.88" y="514.37" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">3</text>
+<text x="503.87" y="544.88" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">4</text>
+<text x="523.29" y="572.28" font-size="11" font-weight="600" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="1.2" fill="#666">5</text>
+<path d="M 548.57 338.94 C 561.57 322.04 561.57 355.84 548.57 338.94" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 537.31 319.44 C 577.24 254.31 842.00 365.47 744.92 350.04" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 503.54 338.94 C 403.98 333.48 773.81 244.42 733.66 330.54" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 514.80 358.44 C 446.01 408.58 328.99 574.83 273.52 486.81" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 537.31 358.44 C 583.51 448.70 190.93 159.49 282.32 147.47" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 514.80 319.44 C 470.07 252.62 539.89 262.38 451.96 251.76" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 316.80 260.52 C 277.31 195.31 21.62 321.65 117.48 306.45" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 339.32 260.52 C 385.34 188.68 364.61 221.03 316.09 166.97" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 316.80 299.52 C 270.67 370.79 237.39 59.53 293.57 127.97" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 350.58 280.02 C 417.16 304.25 534.68 250.11 484.95 159.50" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 339.32 299.52 C 374.61 370.67 293.09 319.63 349.32 388.42" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 305.54 280.02 C 220.74 307.41 406.72 542.69 526.05 522.26" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 706.95 181.31 C 779.11 180.54 789.83 437.88 733.66 369.54" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 673.18 161.81 C 627.13 92.48 662.54 276.15 711.14 330.54" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 673.18 200.81 C 637.83 270.38 615.88 347.29 699.88 350.04" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 695.69 200.81 C 746.54 281.52 551.53 214.79 507.46 159.50" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 695.69 161.81 C 735.24 96.61 553.80 49.69 507.46 120.50" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 661.92 181.31 C 596.39 186.63 484.92 176.93 440.70 232.26" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 368.07 609.21 C 346.94 606.41 376.21 589.51 368.07 609.21" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 368.07 648.21 C 323.35 731.98 365.71 460.79 284.78 467.31" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 390.59 648.21 C 434.81 734.43 466.86 408.41 383.09 407.92" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 356.82 628.71 C 280.81 628.25 254.24 406.60 338.06 407.92" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 401.85 628.71 C 470.89 633.68 588.46 633.25 548.56 561.26" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 390.59 609.21 C 433.92 543.48 440.79 555.47 514.79 541.76" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 711.14 369.54 C 681.69 431.14 496.55 642.63 526.05 561.26" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 239.75 467.31 C 226.75 484.21 226.75 450.41 239.75 467.31" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 251.01 486.81 C 259.14 506.52 229.87 489.62 251.01 486.81" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 273.52 447.81 C 310.39 381.15 173.62 394.81 151.26 325.95" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 251.01 447.81 C 214.56 380.68 337.69 261.47 406.92 251.76" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 162.52 306.45 C 175.52 289.55 175.52 323.35 162.52 306.45" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 128.74 286.95 C 107.61 284.14 136.88 267.24 128.74 286.95" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 128.74 325.95 C 91.81 400.41 271.02 236.01 293.57 166.97" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 151.26 286.95 C 195.14 211.96 308.66 500.75 349.32 427.42" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 327.35 147.47 C 394.32 152.93 600.77 155.59 518.72 140.00" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 316.09 127.97 C 361.32 45.09 372.10 338.13 418.18 271.26" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 473.69 140.00 C 397.54 141.33 496.55 345.60 440.70 271.26" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 484.95 120.50 C 447.77 39.06 440.95 498.41 371.83 427.42" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 418.18 232.26 C 372.23 160.18 397.60 313.45 371.83 388.42" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 559.82 541.76 C 572.82 524.86 572.82 558.66 559.82 541.76" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 548.56 522.26 C 540.43 502.56 569.70 519.46 548.56 522.26" fill="none" stroke="#06c" stroke-width="1.6" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

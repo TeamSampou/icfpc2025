@@ -158,15 +158,16 @@ recExploreIO  putLog  bucket = rec_
 --------------------------------------------------------------------------------
 
 {-
-* 全てのドアの先のラベルを確認した部屋のみを列挙
+* ドアを開ける数や範囲を決めて探索する戦略では、
+  開いているドアの数は一定
  -}
-filledRooms_ :: PRooms -> PRooms
-filledRooms_ = Map.filter ((== 6). Map.size)
+sizedPRooms_ :: Int -> PRooms -> PRooms
+sizedPRooms_ doorCount = Map.filter ((== doorCount). Map.size)
 
-filledRooms :: CandBucket -> IO [(Label, PRooms)]
-filledRooms bucket = do
+sizedPRooms :: Int -> CandBucket -> IO [(Label, PRooms)]
+sizedPRooms dc bucket = do
   as <- getAssocs bucket
-  pure [(lb, filledRooms_ prs) | (lb, prs) <- as]
+  pure [(lb, sizedPRooms_ dc prs) | (lb, prs) <- as]
 
 {-
 * ドアの先のラベルのパターンで sort して group
@@ -184,8 +185,9 @@ type IndexedRoom = (RoomIndex, Label, (PRoom, [Plan']))
 
 byRooms :: CandBucket -> IO [IndexedRoom]
 byRooms bucket = do
-  fillss <- filledRooms bucket
-  pure [(ix, lb, room) | ix <- [0..] | (lb, fills) <- fillss, room <- byRooms_ fills ]
+  let doorCount = 6
+  prss <- sizedPRooms doorCount bucket
+  pure [(ix, lb, room) | ix <- [0..] | (lb, prs) <- prss, room <- byRooms_ prs ]
 
 pprByRoom :: RoomIndex -> Label -> (PRoom, [Plan']) -> String
 pprByRoom ix lb (pr, plans) =

@@ -181,13 +181,20 @@ byRooms_ prs =
   where rplans ((pf, r):xs) = (r, pf : map fst xs)
         rplans  []          = error "groupBy result element, not reach"
 
-type IndexedRoom' i = (i, Label, (PRoom, [Plan']))
+type Room = (Label, (PRoom, [Plan']))
+type IndexedRoom' i = (i, Room)
 type IndexedRoom = IndexedRoom' RoomIndex
+
+roomPlans :: Room -> [Plan']
+roomPlans (_lb, (_proom, plans)) = plans
+
+iroomPlans :: IndexedRoom' i -> [Plan']
+iroomPlans = roomPlans . snd
 
 byRooms :: Int -> CandBucket -> IO [IndexedRoom]
 byRooms doorCount bucket = do
   prss <- sizedPRooms doorCount bucket
-  pure [(ix, lb, room) | ix <- [0..] | (lb, prs) <- prss, room <- byRooms_ prs ]
+  pure [(ix, (lb, room)) | ix <- [0..] | (lb, prs) <- prss, room <- byRooms_ prs ]
 
 pprByRoom :: RoomIndex -> Label -> (PRoom, [Plan']) -> String
 pprByRoom ix lb (pr, plans) =
@@ -201,7 +208,7 @@ byPlans
   :: [IndexedRoom' i]
   -> [ByPlan i]
 byPlans rooms =
-  [(plan, (ix, lb, room)) | (ix, lb, (room, plans)) <- rooms, plan <- plans ]
+  [(plan, (ix, lb, room)) | (ix, (lb, (room, plans))) <- rooms, plan <- plans ]
 
 {-
 * 部屋の区別確定後に開いていないドアを開けるためのプラン
@@ -218,7 +225,7 @@ plansToFill rooms byPlanList = (noNexts, refineNexts)
           ]
         noNexts =
           [ (pp, d, ix, room)
-          | (ix, _lb, (room, plans)) <- rooms
+          | (ix, (_lb, (room, plans))) <- rooms
           , (pp, d) <- noNext1 plans
           ]
         noNext1 plans =
@@ -242,12 +249,11 @@ plansPrefixNotSrc :: Int -> [IndexedRoom] -> IO [Plan']
 plansPrefixNotSrc bdepth rooms = do
   when (not $ null nsrc) $
     putStr $ unlines $
-    "not src rooms:" : ["  " ++ pprByRoom ix lb room | (ix, lb, room) <- nsrc]
-  pure [p | (_ix, _lb, (_room, p@(P {}) : _)) <- nsrc]
+    "not src rooms:" : ["  " ++ pprByRoom ix lb room | (ix, (lb, room)) <- nsrc]
+  pure [p | (_ix, (_lb, (_room, p@(P {}) : _))) <- nsrc]
   where
     srcs = filter ((< (bdepth - 1)) . plength)
-    roomPlan (_ix, _lb, (_room, plan)) = plan
-    nsrc = filter (null . srcs . roomPlan) rooms
+    nsrc = filter (null . srcs . iroomPlans) rooms
 
 
 -----
@@ -260,7 +266,7 @@ type LayoutConn = ((RoomIndex, Base.Door), (RoomIndex, Base.Door))
 getLayout :: [Plan'] -> [IndexedRoom] -> IO Layout
 getLayout srcs rooms = do
   putStrLn ""
-  putStr $ unlines [pprByRoom ix lb room | (ix, lb, room) <- rooms]
+  putStr $ unlines [pprByRoom ix lb room | (ix, (lb, room)) <- rooms]
 
   putStr $ unlines $
     ("by-plan" :)
@@ -289,7 +295,7 @@ getLayout srcs rooms = do
     ["  " <> show s | s <- mutuals]
 
   pure (roomsLb, startIx, selfs ++ mutuals)
-  where roomsLb = [fromIntegral lb | (_, L lb, _)<- rooms]
+  where roomsLb = [fromIntegral lb | (_, (L lb, _))<- rooms]
         (startIx, _, _) = byPlan <!> P []
 
         selfs = [((si, door), (di, door)) | (si, di, door) <- eqs]

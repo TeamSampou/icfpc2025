@@ -8,6 +8,8 @@ import qualified Data.IntMap.Strict as IntMap
 import qualified Data.IntSet as IntSet
 import Data.IORef
 import Data.List (elemIndex)
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (fromJust)
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
@@ -27,6 +29,8 @@ findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe
 findGraph' numRooms t@(Node startingRoomLabel _ _) = do
   -- Finite-domain sort は振る舞いが怪しいので代わりにIntを用いる
   let useIntSort = True
+
+  sBool <- Z3.mkBoolSort
 
   sRoom <-
     if useIntSort then do
@@ -49,16 +53,55 @@ findGraph' numRooms t@(Node startingRoomLabel _ _) = do
         Z3.solverAssertCnstr =<< Z3.mkLe r2 ub
     return func
 
-  -- 部屋の間のエッジは逆向きのエッジが存在しないといけない。
-  -- 本当は本数まであっていないといけないが、ここでは存在だけを制約にする。
-  forM_ rooms $ \room -> do
-    forM_ doorFuncs $ \df -> do
-       -- d_1(d_i(room))=room ∨ … ∨ d_n(d_i(room))=room
-       room2 <- Z3.mkApp df [room]
-       cs <- forM doorFuncs $ \df2 -> do
-         room3 <- Z3.mkApp df2 [room2]
-         Z3.mkEq room room3
-       Z3.solverAssertCnstr =<< Z3.mkOr cs
+  if True then do
+    -- 対称性を厳密に保証する
+
+    -- e[i,j](r) は部屋 r からドア i を通った際の出口側のドアは j であるということを表す論理変数
+    -- すなわち i で行ったら j で返ってこれる。
+    e <- fmap (Map.fromList . concat) $ forM [0..5] $ \i -> do
+      forM [0..5] $ \j -> do
+        sym <- Z3.mkStringSymbol ("e" ++ show i ++ show j)
+        func <- Z3.mkFuncDecl sym [sRoom] sBool
+        pure ((i,j), func)
+
+    -- 各r,iについて e[i,j] を満たす j はただ一つ
+    forM_ rooms $ \r -> do
+      forM_ [0..5] $ \i -> do
+        cs <- forM [0..5] $ \j -> Z3.mkApp (e Map.! (i,j)) [r]
+        Z3.solverAssertCnstr =<< Z3.mkOr cs
+        forM_ (pairs cs) $ \(c1,c2) -> do
+          tmp <- Z3.mkAnd [c1,c2]
+          Z3.solverAssertCnstr =<< Z3.mkNot tmp
+
+    -- e[i,j](r) → d[j](d[i](r))=r ∧ e[j,i](d[i](r))
+    -- ちゃんと戻ってこれて、ドア同士が対応している
+    forM_ rooms $ \r -> do
+      forM_ [0..5] $ \i -> do
+        forM_ [0..5] $ \j -> do
+          premise <- Z3.mkApp (e Map.! (i,j)) [r]
+          -- i で行った先の部屋
+          r2 <- Z3.mkApp (doorFuncs !! i) [r]
+          -- i で行ったら j で戻ってこれる。すなわち d[j](r2)=r
+          conclusion1 <- do
+            r3 <- Z3.mkApp (doorFuncs !! j) [r2]
+            Z3.mkEq r r3
+          -- 戻ってくる際のドアの対応はj,i。すなわち e[j,i](r2)
+          conclusion2 <- Z3.mkApp (e Map.! (j,i)) [r2]
+          -- 最終的な条件
+          conclusion <- Z3.mkAnd [conclusion1, conclusion2]
+          Z3.solverAssertCnstr =<< Z3.mkImplies premise conclusion
+
+  else do
+    -- 部屋の間のエッジは逆向きのエッジが存在しないといけない。
+    -- 本当は本数まであっていないといけないが、ここでは存在だけを制約にする。
+    forM_ rooms $ \room -> do
+      forM_ doorFuncs $ \df -> do
+         -- d_1(d_i(room))=room ∨ … ∨ d_n(d_i(room))=room
+         room2 <- Z3.mkApp df [room]
+         cs <- forM doorFuncs $ \df2 -> do
+           room3 <- Z3.mkApp df2 [room2]
+           Z3.mkEq room room3
+         Z3.solverAssertCnstr =<< Z3.mkOr cs
 
   sLabel <- Z3.mkBvSort 2
   let fixedLabels = startingRoomLabel : IntSet.toList (IntSet.delete startingRoomLabel (Trie.collectUnmodifiedLabels t))
@@ -147,6 +190,11 @@ findGraph' numRooms t@(Node startingRoomLabel _ _) = do
       pure (label, outEdges)
 
     return (Just (g, 0))
+
+
+pairs :: [a] -> [(a,a)]
+pairs [] = []
+pairs (x:xs) = [(x,y) | y <- xs] ++ pairs xs
 
 
 -- test case for "probatio"

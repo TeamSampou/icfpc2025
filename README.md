@@ -46,24 +46,26 @@ ghci> :m +Control.Monad
 ghci> :m +System.Random.MWC
 ghci> initClient
 ghci> select "primus"
-ghci> plan <- (withSystemRandom $ \gen -> randomWalk gen (maxPlan 6) :: IO Plan)  -- This '6' means a number of doors which any room has.
+ghci> let numRooms :: Int = 6
+ghci> plan <- (withSystemRandom $ \gen -> randomWalk gen (maxPlan numRooms) :: IO Plan)
 ghci> plan
 "021320403505044123550520034431312210134541025332505010033554343013423011254052531011533004340304253205132534"
 ghci> ([result],qc) <- explore [plan]
 ghci> result
 [0,0,3,0,0,3,3,3,3,2,3,3,1,2,3,3,0,3,2,3,1,2,3,2,0,0,0,2,3,2,0,0,0,0,0,0,0,0,0,2,3,3,0,1,1,1,0,0,3,1,2,3,3,0,1,1,1,0,0,0,2,1,1,1,1,1,0,2,1,1,1,1,2,1,1,1,2,3,2,3,2,0,1,2,0,0,0,0,1,1,3,2,3,3,2,0,2,1,1,0,3,3,1,1,0,3,1,1,1]
 ghci> let t = ObservationSummary.fromObservation plan result
-ghci> length $ Graph.enumGraph 6 t -- This 6 means a number of rooms of problem "primus". You must modify it if you select another one.
+ghci> length $ Graph.enumGraph numRooms t
 8
-ghci> plan2 <- (withSystemRandom $ \gen -> randomWalk gen (maxPlan 6) :: IO Plan)
+ghci> plan2 <- (withSystemRandom $ \gen -> randomWalk gen (maxPlan numRooms) :: IO Plan)
 ghci> plan2
 "444353015544011451142120542352352412021120333354143413534021124044433230143221233515203430144335244212214453"
 ghci> ([result2],qc2) <- explore [plan2]
 ghci> result2
 [0,2,3,3,2,3,2,0,0,0,0,2,3,3,0,0,2,3,0,0,2,1,1,1,2,3,3,2,1,1,1,0,0,0,2,0,3,3,2,0,0,0,0,0,0,0,0,0,2,0,2,1,1,1,0,0,0,2,0,0,0,0,0,2,0,2,3,3,2,1,1,1,1,1,1,1,1,1,2,1,1,0,0,0,0,0,0,0,2,1,1,1,1,3,2,1,1,1,1,3,2,0,3,2,0,2,3,1,1]
 ghci> let t2 = ObservationSummary.fromObservations [(plan,result), (plan2,result2)]
-ghci> length $ Graph.enumGraph 6 t2
+ghci> length $ Graph.enumGraph numRooms t2
 1
-ghci> Graph.writePng "test.png" $ head $ Graph.enumGraph 6 t2
-ghci> guess $ Graph.toLayout $ head $ Graph.enumGraph 6 t2
+ghci> Graph.writePng "test.png" $ head $ Graph.enumGraph numRooms t2
+ghci> guess $ Graph.toLayout $ head $ Graph.enumGraph numRooms t2
+True
 ```

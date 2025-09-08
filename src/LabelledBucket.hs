@@ -282,6 +282,9 @@ getLayout srcs rooms = do
   printCount "lts" lts
   printCount "gts" gts
   putStr $ unlines $
+    "oneway not found:" :
+    ["  " <> show k | k <- noOneways]
+  putStr $ unlines $
     "mutial connections:" :
     ["  " <> show s | s <- mutuals]
 
@@ -314,6 +317,10 @@ getLayout srcs rooms = do
                 (si, _slb, _sroom) = byPlan <!> src
                 (di, _dlb, _droom) = byPlan <!> dst
           ]
+
+        noOneways = [(si, dw) | si <- [0..rcount-1], dw <- [0..5], not $ Map.member (si, dw) onewaysM]
+        rcount = length rooms
+        onewaysM = Map.fromList [((si, dw), t) | t@((si, _di, dw), (_src, _dst)) <- oneways]
 
         byPlan = Map.fromList $ byPlans rooms
 

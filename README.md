@@ -115,6 +115,14 @@ ghci> guess $ Graph.toLayout g
 True
 ```
 
-### Systematic exploration
+### Systematic exploration 1
+
+Run the command `oga-solve` with 2 arguments, (1) the problem name, and (2) the depth limit. The program systematically opens all doors by a depth-first approach.
+
+```
+$ stack run oga-solve1 zain 100
+```
+
+### Systematic exploration 2
 
 (TBD)

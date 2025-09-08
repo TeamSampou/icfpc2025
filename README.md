@@ -26,13 +26,15 @@ This is Team Sampou's repository for the [ICFP Programming Contest 2025](http://
 
 We employed several independent approaches.
 
-### 1. Systematic exploration through repeated calls to `/explore`
-
-### 2. Constraint-solving approach
+### Constraint-solving approach
 
 In this approach, we execute `/explore` with one or several random walks of the maximum permitted length, and then summarize the observation as a trie (see [src/ObservationSummary.hs](src/ObservationSummary.hs)) and solve a constraint satisfaction problem to synthesize a room layout that is consistent with the observation.
 
 Initially, we explored the search space using backtracking (see `enumGraph` in [src/Graph.hs](src/Graph.hs)), but later we employed the SMT solver [Z3](https://github.com/Z3Prover/z3) (see [src/Graph/Z3.hs](src/Graph/Z3.hs)).
+
+### Systematic exploration through repeated calls to `/explore`
+
+(TBD)
 
 ## Usage
 
@@ -42,7 +44,7 @@ Prepare `.env` file with the following content:
 ID="..."
 ```
 
-### 0. Manual solving
+### Manual solving
 
 Run `stack repl`.
 
@@ -60,8 +62,6 @@ ghci> explore ["4","5","02","03","04","05","31","32","34","35"]
 ghci> guess ([0,1,2], 0, [((0,0),(1,2)), ((0,1),(0,1)), ((0,2),(1,5)), ((0,3),(2,0)), ((0,4),(2,2)), ((0,5),((2,3))), ((1,0),(2,1)), ((1,1),(1,4)), ((1,3), (2,5)), ((2,4),(2,4)), ((2,5),(1,3))])
 True
 ```
-
-### Systematic exploration
 
 ### Constraint-solving approach using `enumGraphs`
 
@@ -105,14 +105,14 @@ ghci> initClient
 ghci> select "secundus"
 ghci> let numRooms :: Int = 12
 ghci> plans <- withSystemRandom $ \gen -> replicateM 2 (randomWalk gen (maxPlan numRooms) :: IO Plan)
-ghci> plans
-["114233542113514354530330034410122241501233331320005523125414210005324241000500020435441224310423040251451551443411050323411333442313230415421350210103151421501311011101100134401203052352032102432554515025231022225433","152211341142525143335553002252133235145240233244200304412140405341355041051453535414501423110433541200544442211550230402342535050552540250532240451414045504543125004424522115133510201355403450304213125404413012533345"]
 ghci> (results,qc) <- explore plans
-ghci> results
-[[0,3,2,0,1,0,1,3,2,0,3,2,0,2,3,1,1,0,1,3,2,0,1,0,2,0,1,1,3,1,0,3,0,1,0,3,1,3,1,3,0,2,0,1,0,2,3,0,3,2,2,2,2,0,1,0,3,0,2,0,2,0,2,0,2,0,2,3,0,3,0,3,1,0,2,0,2,2,2,2,0,2,2,0,2,0,3,1,0,1,1,1,3,0,1,0,2,3,2,3,0,3,2,0,3,2,2,3,1,1,3,2,2,3,2,3,2,2,3,0,2,0,2,3,1,0,1,1,3,0,2,3,1,3,2,0,2,0,2,3,0,2,0,2,3,0,2,3,2,0,1,0,2,3,1,1,3,0,2,0,1,0,2,0,3,2,3,0,2,0,2,0,3,1,1,3,1,3,0,3,1,3,2,0,1,3,0,3,1,1,3,0,3,1,1,3,1,1,1,1,0,2,3,0,3,0,2,3,0,3,0,1,0,3,1,1,0],[0,3,0,1,0,2,3,1,1,3,2,0,1,3,0,3,2,0,2,0,1,0,2,2,3,2,2,0,1,3,0,2,0,1,3,2,3,1,1,1,0,3,1,3,2,3,0,3,2,0,2,0,1,0,2,2,3,0,2,0,3,2,3,2,3,2,3,1,0,2,3,2,3,0,2,3,1,1,0,2,3,2,3,1,1,1,0,3,1,1,0,2,0,2,2,0,1,0,1,0,3,0,1,0,1,1,3,2,0,1,0,2,3,1,3,0,2,3,2,3,0,2,0,1,3,2,3,1,0,1,0,2,0,3,1,3,0,3,0,2,0,3,0,3,1,1,1,0,1,0,1,0,2,3,1,3,2,2,2,0,2,0,2,3,2,3,2,0,2,3,0,1,0,2,3,1,0,1,3,1,0,1,0,3,1,0,2,0,3,1,3,1,3,1,3,2,0,2,0,2,0,2,0,3,2,0,2,0,1,3,0,3,1,0,1,1,1]]
 ghci> let t = ObservationSummary.fromObservations $ zip plans results
 ghci> Just g <- Graph.Z3.findGraph numRooms t
-ghci> Graph.writePng "example.png" g
 ghci> guess $ Graph.toLayout g
 True
 ```
+
+### Systematic exploration
+
+(TBD)
+

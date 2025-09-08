@@ -100,13 +100,10 @@ deriveTrivialDisequalities t = Set.map (\(p1,p2) -> (seqToPlan p1, seqToPlan p2)
 
 deriveTrivialDisequalities' :: ObservationSummary -> Set (Seq Action, Seq Action)
 deriveTrivialDisequalities' t = Set.fromList $ do
-  ((p1,l1),(p2,l2)) <- pairs [check s $ (s, l) | (p, l :: RoomLabel) <- toList t, let s = planToSeq p]
+  ((p1,l1),(p2,l2)) <- pairs [(s, l) | (p, l :: RoomLabel) <- toList t, let s = planToSeq p, not (any isAlterLabel s)]
   guard $ l1 /= l2
   assert (p1 < p2) $ pure (p1, p2)
   where
-    check s x
-      | any isAlterLabel s = error "label altering is not supported yet"
-      | otherwise = x
     isAlterLabel (AlterLabel _) = True
     isAlterLabel (PassDoor _) = False
 

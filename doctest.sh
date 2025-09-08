@@ -12,7 +12,7 @@ fi
 find src -type f -name '*.hs' | while read path ; do
     if has_doctest "$path" ; then
         $vecho "* run doctest for $path"
-        doctest $path
+        doctest -isrc $path
     else
         $vecho "* doctest not found for $path"
     fi

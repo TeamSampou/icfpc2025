@@ -343,6 +343,39 @@ doExplore Driver{..} bucket plans = do
   where run plan = runExploreIO (\_ -> pure ()) bucket plan
         fromInts rs = [map fromIntegral ri | ri <- rs]
 
+solveD :: Driver -> Problem -> String -> Int -> Int -> IO (Layout, Int)
+solveD drv@Driver{..} (prob, size) ename depth width0 = do
+  let width = width0 `min` 6
+      doors = drop (6 - width) allDoors
+  putStrLn $ "width: " ++ show width
+  putStrLn $ "doors: " ++ show doors
+  let srcs1 = map P $ replicateM (0 `max` depth - 1) doors
+      plansD = map P $ replicateM depth doors
+
+  rinitClient
+  _ <- rselect prob ename
+  bucket <- newCandBucket
+
+  (_results1, _qc1) <- doExplore drv bucket plansD
+
+  roomsD <- byRooms width bucket
+  checkWithSize size roomsD
+
+  let fillconn = do
+        let byPlan = byPlans roomsD
+            (pf1, pf2) = plansToFill roomsD byPlan
+            srcs2 = [plan | ((plan, _nplan), _, _ix, _room) <- pf1]
+            plansC = [nnplan | ((_nplan, nnplan), _d) <- pf2]
+        putStrLn $ "plansC: " ++ show plansC
+        (_results2, qc2) <- doExplore drv bucket plansC
+        roomsC <- byRooms 6 bucket
+        pure (roomsC, srcs2, qc2)
+
+  (roomsC, srcs2, qc2) <- fillconn
+  checkWithSize size roomsC
+
+  (,) <$> getLayout (srcs1 ++ srcs2) roomsC <*> pure qc2
+
 solveBF :: Driver -> Problem -> String -> Int -> IO (Layout, Int)
 solveBF drv@Driver{..} (prob, size) ename bdepth = do
   let plansBF = map P $ replicateM bdepth allDoors

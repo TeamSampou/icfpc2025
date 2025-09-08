@@ -181,7 +181,8 @@ byRooms_ prs =
   where rplans ((pf, r):xs) = (r, pf : map fst xs)
         rplans  []          = error "groupBy result element, not reach"
 
-type IndexedRoom = (RoomIndex, Label, (PRoom, [Plan']))
+type IndexedRoom' i = (i, Label, (PRoom, [Plan']))
+type IndexedRoom = IndexedRoom' RoomIndex
 
 byRooms :: Int -> CandBucket -> IO [IndexedRoom]
 byRooms doorCount bucket = do
@@ -191,6 +192,44 @@ byRooms doorCount bucket = do
 pprByRoom :: RoomIndex -> Label -> (PRoom, [Plan']) -> String
 pprByRoom ix lb (pr, plans) =
   show ix <> ": " <> show lb <> ": " <> show pr <> " " <> show plans
+
+-----
+
+type ByPlan i = (Plan', (i, Label, PRoom))
+
+byPlans
+  :: [IndexedRoom' i]
+  -> [ByPlan i]
+byPlans rooms =
+  [(plan, (ix, lb, room)) | (ix, lb, (room, plans)) <- rooms, plan <- plans ]
+
+{-
+* 部屋の区別確定後に開いていないドアを開けるためのプラン
+ -}
+plansToFill
+  :: [IndexedRoom' i]
+  -> [ByPlan i]
+  -> ([((Plan', Plan'), Door', i, PRoom)], [((Plan', Plan'), Door')])
+plansToFill rooms byPlanList = (noNexts, refineNexts)
+  where refineNexts =
+          [ n1
+          | ((_, nplan), _d, _ix, _room) <- noNexts
+          , n1@(_pp, _d) <- noNext1 [nplan]
+          ]
+        noNexts =
+          [ (pp, d, ix, room)
+          | (ix, _lb, (room, plans)) <- rooms
+          , (pp, d) <- noNext1 plans
+          ]
+        noNext1 plans =
+          [ ((plan, nplan), d)
+          | d <- allDoors
+          , let nplans = [plan <> P [d] | plan <- plans]
+          , not $ any (`Map.member` byPlan) nplans
+          , plan:_   <- [plans]
+          , nplan:_  <- [nplans]
+          ]
+        byPlan = Map.fromList byPlanList
 
 -----
 
@@ -218,7 +257,7 @@ debug = False
 
 type LayoutConn = ((RoomIndex, Base.Door), (RoomIndex, Base.Door))
 
-getLayout :: [Plan'] -> [(RoomIndex, Label, (PRoom, [Plan']))] -> IO Layout
+getLayout :: [Plan'] -> [IndexedRoom] -> IO Layout
 getLayout srcs rooms = do
   putStrLn ""
   putStr $ unlines [pprByRoom ix lb room | (ix, lb, room) <- rooms]
@@ -276,7 +315,7 @@ getLayout srcs rooms = do
                 (di, _dlb, _droom) = byPlan <!> dst
           ]
 
-        byPlan = Map.fromList [(plan, (ix, lb, room)) | (ix, lb, (room, plans)) <- rooms, plan <- plans ]
+        byPlan = Map.fromList $ byPlans rooms
 
         m <!> k = maybe (error $ "not found: " ++ show k) id $ Map.lookup k m
 

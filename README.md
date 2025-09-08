@@ -1,6 +1,6 @@
 [![Haskell](https://github.com/TeamSampou/icfpc2025/actions/workflows/haskell.yml/badge.svg)](https://github.com/TeamSampou/icfpc2025/actions/workflows/haskell.yml)
 
-# ICFP Programming Contest 205
+# ICFP Programming Contest 2025
 
 This is Team Sampou's repository for the [ICFP Programming Contest 2025](http://icfpcontest2025.github.io/).
 

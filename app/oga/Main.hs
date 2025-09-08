@@ -77,7 +77,7 @@ solve limit  = do
     mapM_ print fixRooms
     mapM_ print zRooms
     when (null zRooms) $ fail "Failed(1)."
-    let (_,_,conn) = formatAnswer zRooms
+    let (_,_,conn) = formatAnswer zRooms [] --ダミー
     -- 長さや部屋数の道をみつけて, 行きでラベルを書き換えて元に戻ってくるプランを作る
     let (f,b) = findPath (length zRooms) conn
     f' <- withAlterLabel f
@@ -85,7 +85,8 @@ solve limit  = do
     mapM_ print fixRooms2
     mapM_ print zRooms2
     when (null zRooms2) $ fail "Failed(2)."
-    return $ formatAnswer zRooms2
+    labels <- checkOrigLabel zRooms2
+    return $ formatAnswer zRooms2 labels
 
 
 solve' 
@@ -132,9 +133,9 @@ findPath n conn = let (xs,ys) = unzip [(PassDoor d1, PassDoor d2) | (d1,d2) <-re
                >>= uncurry (go (k-1) css)
 
 
-formatAnswer :: [RoomZ] -> Layout
-formatAnswer rooms =
-    ( map rzLabel $ sortBy (compare`on`rzIndex) rooms
+formatAnswer :: [RoomZ] -> [RoomLabel] -> Layout
+formatAnswer rooms labels =
+    ( labels
     , 0
     , calcDoorPair rooms
     )
@@ -162,6 +163,11 @@ withAlterLabel plan = do
     a     <- fmap  AlterLabel $ Rand.uniformR (0::RoomLabel, 3) gen
     alters<- fmap (map AlterLabel) $ replicateM (length plan) (Rand.uniformR (0::RoomLabel, 3) gen)
     return $ (a:) $ concat $ transpose [plan, alters]
+
+checkOrigLabel :: [RoomZ] -> IO [RoomLabel]
+checkOrigLabel zrooms = do
+    (rss,_) <- explore $ map renderPlan [[PassDoor d| PassDoor d <-plan] | plan<- map rzPlan $ sortBy(compare`on`rzIndex) zrooms]
+    return $ map last rss
 
 
 allDoors :: ParsedPlan

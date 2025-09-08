@@ -155,24 +155,7 @@ recExploreIO  putLog  bucket = rec_
                               ]
                   ]
 
------
-
--- 見つかったラベル数が、部屋の全体数に達した場合、同じラベル内は同じ部屋
-reduceUniqueLabels_ :: PRooms -> PRooms
-reduceUniqueLabels_ prs = prs1
-  where (plans, rs) = unzip $ Map.toList prs
-        u = Map.unions rs
-        prs1 = Map.fromList [(plan, u) | plan <- plans]
-
-reduceUniqueLabels
-  :: (String -> IO ())
-  -> CandBucket -> IO ()
-reduceUniqueLabels _putLog bucket = do
-  as <- getAssocs bucket
-  sequence_ [writeArray bucket lb (reduceUniqueLabels_ rs) | (lb, rs) <- as]
-
--- plans: "000","123","213","333"
--- results: [0,0,0,0],[0,1,0,1],[0,0,1,2],[0,1,2,0]
+--------------------------------------------------------------------------------
 
 {-
 * 全てのドアの先のラベルを確認した部屋のみを列挙
@@ -371,20 +354,26 @@ _example2 = do
     "231025153214112435435242513423043543011400411314240201"
     [0,2,0,2,2,0,2,0,2,0,2,0,1,1,1,1,0,2,0,1,1,0,2,2,0,2,0,2,2,0,2,2,2,0,2,2,0,1,1,1,0,1,1,0,2,0,2,0,1,1,0,1,1,1,1]
   putStr . unlines =<< pprsCandBucket bucket
-  reduceUniqueLabels putStr bucket
-  putStr . unlines =<< pprsCandBucket bucket
+  -- reduceUniqueLabels putStr bucket
+  -- putStr . unlines =<< pprsCandBucket bucket
 
-------------------------------------------------------------
+-----
 
 {-
-type RoomId = Int
+-- 見つかったラベル数が、部屋の全体数に達した場合、同じラベル内は同じ部屋
+reduceUniqueLabels_ :: PRooms -> PRooms
+reduceUniqueLabels_ prs = prs1
+  where (plans, rs) = unzip $ Map.toList prs
+        u = Map.unions rs
+        prs1 = Map.fromList [(plan, u) | plan <- plans]
 
-data Room =
-  Room
-  { id_      :: RoomId
-  , label_   :: Label
-  , doors_   :: IORef (Set (Door, Label))
-  }
+reduceUniqueLabels
+  :: (String -> IO ())
+  -> CandBucket -> IO ()
+reduceUniqueLabels _putLog bucket = do
+  as <- getAssocs bucket
+  sequence_ [writeArray bucket lb (reduceUniqueLabels_ rs) | (lb, rs) <- as]
 
-type Rooms = IOArray Int Room
+-- plans: "000","123","213","333"
+-- results: [0,0,0,0],[0,1,0,1],[0,0,1,2],[0,1,2,0]
  -}

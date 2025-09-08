@@ -34,7 +34,10 @@ Initially, we explored the search space using backtracking (see `enumGraph` in [
 
 ### Systematic exploration through repeated calls to `/explore`
 
-(TBD)
+Basically, we keep opening doors until we can identify a room with the target problem size.
+Since we identify rooms by the patterns beyond the doors of the same room, we apply the same plan until we reach the target room.
+After identifying the room, we perform a search to finalize the connections.
+e.g. [src/LabelledBucket.hs](src/LabelledBucket.hs), [app/oga/Main.hs](app/oga/Main.hs)
 
 ## Usage
 
@@ -115,4 +118,3 @@ True
 ### Systematic exploration
 
 (TBD)
-

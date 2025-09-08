@@ -5,6 +5,7 @@ module Base
   , Door
   , Plan
   , maxPlan
+  , maxPlanFull
   , randomWalk
 
   -- * Parsed Plan
@@ -29,8 +30,15 @@ type Door = Int
 
 type Plan = String
 
+-- | Number of doorways per plan for lightning-round problems
 maxPlan :: Int -> Int
 maxPlan numRooms = numRooms * 18
+
+-- | Number of doorways per plan for full-round problems
+--
+-- これはチョークを使う回数を含まない。
+maxPlanFull :: Int -> Int
+maxPlanFull numRooms = numRooms * 6
 
 randomWalk :: PrimMonad m => Rand.Gen (PrimState m) -> Int -> m Plan
 randomWalk gen steps = fmap (concat . map show) $ replicateM steps (Rand.uniformR (0::Door, 5) gen)

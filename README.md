@@ -65,7 +65,9 @@ ghci> result2
 ghci> let t2 = ObservationSummary.fromObservations [(plan,result), (plan2,result2)]
 ghci> length $ Graph.enumGraph numRooms t2
 1
-ghci> Graph.writePng "test.png" $ head $ Graph.enumGraph numRooms t2
+ghci> Graph.writePng "example.png" $ head $ Graph.enumGraph numRooms t2
 ghci> guess $ Graph.toLayout $ head $ Graph.enumGraph numRooms t2
 True
 ```
+
+![The example.png saved above](solutions/primus/example.png)

@@ -1,7 +1,9 @@
 module Graph.Z3
   ( findGraph
+  , findGraph2
   ) where
 
+import Control.Exception
 import Control.Monad
 import Control.Monad.Trans
 import qualified Data.IntMap.Strict as IntMap
@@ -13,7 +15,9 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (fromJust)
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Vector as V
+import Text.Printf
 import qualified Z3.Monad as Z3
 
 import Base
@@ -198,6 +202,162 @@ findGraph' numRooms t@(Node startingRoomLabel _ _) = do
       pure (label, outEdges)
 
     return (Just (g, 0))
+
+
+findGraph2 :: Int -> ObservationSummary -> IO (Maybe (DiGraph, RoomIndex))
+findGraph2 numRooms t = Z3.evalZ3 $ findGraph2' numRooms t
+
+findGraph2' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe (DiGraph, RoomIndex))
+findGraph2' numRooms t@(Node startingRoomLabel _ _) = do
+  -- 各ラベルについて floor (numRooms / 4) 個の部屋はあると仮定
+  let assumeBalancedLabelDistribution = False
+
+  let rooms :: [RoomIndex]
+      rooms = [0..numRooms-1]
+      labels :: [RoomLabel]
+      labels = [0..3]
+      doors :: [Door]
+      doors = [0..5]
+  eTrue  <- Z3.mkTrue
+  eFalse <- Z3.mkFalse
+
+  let assertOneHot :: [Z3.AST] -> z3 ()
+      assertOneHot cs = do
+        z <- Z3.mkOr cs
+        zs <- forM (pairs cs) $ \(c1,c2) -> Z3.mkNot =<< Z3.mkAnd [c1,c2]
+        Z3.solverAssertCnstr =<< Z3.mkAnd (z : zs)
+
+  -- 出口側のドアまで考慮した接続関係 connections(r1,d1,r2,d2)
+  connections <- fmap Map.fromList $ sequence
+      [ do v <- Z3.mkBoolVar =<< Z3.mkStringSymbol (printf "c_%d_%d_%d_%d" r1 d1 r2 d2)
+           pure ((r1,d1,r2,d2), v)
+      | r1 <- rooms
+      , d1 <- doors
+      , r2 <- rooms
+      , d2 <- doors
+      ]
+  assert (Map.size connections == numRooms * 6 * numRooms * 6) $ pure ()
+
+  -- 行ったら戻れる
+  -- TODO: 対称性を制約ではなく変数レベルで行う
+  sequence_
+    [ Z3.solverAssertCnstr =<< Z3.mkEq (connections Map.! (r1,d1,r2,d2)) (connections Map.! (r2,d2,r1,d1))
+    | r1 <- rooms
+    , r2 <- rooms
+    , d1 <- doors
+    , d2 <- doors
+    ]
+
+  -- 行き先は一意
+  forM_ rooms $ \r1 -> do
+    forM_ doors $ \d1 -> do
+      assertOneHot [connections Map.! (r1,d1,r2,d2) | r2 <- rooms, d2 <- doors]
+
+  -- 出口側のドアを考慮しない接続関係 connections2(r1,d,r2)
+  connections2 <- fmap Map.fromList $ sequence
+    [ do c <- Z3.mkOr [connections Map.! (r1,d1,r2,d2) | d2 <- [0..5]]
+         v <- Z3.mkBoolVar =<< Z3.mkStringSymbol (printf "c_%d_%d_%d" r1 d1 r2)
+         Z3.solverAssertCnstr =<< Z3.mkEq v c
+         pure ((r1,d1,r2), v)
+    | r1 <- rooms
+    , d1 <- [0..5]
+    , r2 <- rooms
+    ]
+  assert (Map.size connections2 == numRooms * 6 * numRooms) $ pure ()
+
+  -- 開始時点での部屋rのラベルがlであるという関係
+  startingLabels <-
+    fmap Map.unions $ forM rooms $ \r -> do
+      tmp <- forM labels $ \l -> do
+        v <- Z3.mkBoolVar =<< Z3.mkStringSymbol (printf "start_label_%d_%d" r l)
+        pure ((r,l), v)
+      assertOneHot (map snd tmp)
+      pure $ Map.fromList tmp
+  assert (Map.size startingLabels == numRooms * 4) $ pure ()
+
+  startingRoom <- forM rooms $ \r -> do
+    Z3.mkBoolVar =<< Z3.mkStringSymbol (printf "start_room_%d" r)
+  assert (length startingRoom == numRooms) $ pure ()
+  assertOneHot startingRoom
+
+  let f :: Seq Action -> [Z3.AST] -> Map (RoomIndex, RoomLabel) Z3.AST -> ObservationSummary -> z3 ()
+      f hist currentRoom currentLabels (Node label childrenD childrenL) = do
+        -- 観測したラベルであるという制約
+        do cs <- forM rooms $ \r -> do
+             Z3.mkAnd [currentRoom !! r, currentLabels Map.! (r, label)]
+           Z3.solverAssertCnstr =<< Z3.mkOr cs
+
+        forM_ (IntMap.toList childrenD) $ \(d, ch) -> do
+          -- 更新後の位置
+          newRoom <- forM rooms $ \r2 -> do
+            cs <- forM rooms $ \r1 -> do
+              Z3.mkAnd [currentRoom !! r1, connections2 Map.! (r1,d,r2)]
+            Z3.mkOr cs
+          f (hist Seq.|> PassDoor d) newRoom currentLabels ch
+
+        forM_ (IntMap.toList childrenL) $ \(l, ch) -> do
+          -- 更新後のラベル
+          let g (r,l') old
+                | l == l'   = Z3.mkIte (currentRoom !! r) eTrue  old
+                | otherwise = Z3.mkIte (currentRoom !! r) eFalse old
+          newLabels <- Map.traverseWithKey g currentLabels
+          f (hist Seq.|> AlterLabel l) currentRoom newLabels ch
+
+  f Seq.empty startingRoom startingLabels t
+
+  -- <symmetry breaking>
+
+  --  開始ルームは 0 とする
+  Z3.solverAssertCnstr (startingRoom !! 0)
+
+  -- 固定できるラベルの symmetry breaking
+  let fixedLabels
+        | assumeBalancedLabelDistribution =
+            let m = numRooms `div` 4
+             in startingRoomLabel : concat [replicate (if label == startingRoomLabel then m - 1 else m) label | label <- [0..3]]
+        | otherwise =
+            startingRoomLabel : IntSet.toList (IntSet.delete startingRoomLabel (Trie.collectUnmodifiedLabels t))
+  forM_ (zip rooms fixedLabels) $ \(r, l) -> do
+    Z3.solverAssertCnstr $ startingLabels Map.! (r, l)
+
+  -- 残りのラベルの順序関係の symmetry breaking
+  forM_ [length fixedLabels .. numRooms - 2] $ \r -> do
+    forM_ labels $ \l -> do
+      forM [0..l-1] $ \l2 -> do
+        let cond = startingLabels Map.! (r, l)
+        body <- Z3.mkNot (startingLabels Map.! (r+1, l2))
+        Z3.solverAssertCnstr =<< Z3.mkImplies cond body
+
+  -- TODO: Trieをトラバースして、各ラベルについて最初に見つかった頂点は、ラベルを固定した部屋だとしても一般性を失わない
+
+  -- </symmetry breaking>
+
+  ret <- Z3.solverCheck
+
+  if ret /= Z3.Sat then do
+    pure Nothing
+  else do
+    m <- Z3.solverGetModel
+    -- str <- Z3.modelToString m
+    -- liftIO $ putStrLn str
+
+    startingRoomVal <- mapM (fmap fromJust . Z3.evalBool m) startingRoom
+    -- liftIO $ print startingRoomVal
+    let solStartingRoom = fromJust $ elemIndex True startingRoomVal
+
+    startingLabelsVal <- mapM (fmap fromJust . Z3.evalBool m) startingLabels
+    -- liftIO $ print $ Map.keys $ Map.filter id startingLabelsVal
+    let solStartingLabels = [head [l | l <- labels, startingLabelsVal Map.! (r,l)] | r <- rooms]
+
+    _connectionsVal <- mapM (fmap fromJust . Z3.evalBool m) connections
+    -- liftIO $ print $ Map.keysSet $ Map.filter id connectionsVal
+
+    connections2Val <- mapM (fmap fromJust . Z3.evalBool m) connections2
+    -- liftIO $ print $ Map.keys $ Map.filter id connections2Val
+
+    let outEdges = IntMap.unionsWith IntMap.union [IntMap.singleton r1 (IntMap.singleton d r2) | ((r1,d,r2), b) <- Map.toList connections2Val, b]
+        g = V.fromList $ zip solStartingLabels [outEdges IntMap.! r | r <- rooms]
+    return (Just (g, solStartingRoom))
 
 
 pairs :: [a] -> [(a,a)]

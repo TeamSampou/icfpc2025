@@ -18,6 +18,10 @@ This is Team Sampou's repository for the [ICFP Programming Contest 2025](http://
 
 * Haskell
 
+## Tools
+
+* [Z3](https://github.com/Z3Prover/z3)
+
 ## Usage
 
 Prepare `.env` file with the following content:

@@ -39,6 +39,7 @@ library
       LayoutHexSVG
       Lib
       ObservationSummary
+      Simulate
       TypesJSON
   other-modules:
       Paths_icfpc2025

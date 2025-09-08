@@ -183,9 +183,8 @@ byRooms_ prs =
 
 type IndexedRoom = (RoomIndex, Label, (PRoom, [Plan']))
 
-byRooms :: CandBucket -> IO [IndexedRoom]
-byRooms bucket = do
-  let doorCount = 6
+byRooms :: Int -> CandBucket -> IO [IndexedRoom]
+byRooms doorCount bucket = do
   prss <- sizedPRooms doorCount bucket
   pure [(ix, lb, room) | ix <- [0..] | (lb, prs) <- prss, room <- byRooms_ prs ]
 
@@ -314,7 +313,7 @@ solveBF Driver{..} (prob, size) ename bdepth = do
   zipWithM_ run plansBF (fromResultsI results)
   putStr . unlines =<< pprsCandBucket bucket
 
-  rooms <- byRooms bucket
+  rooms <- byRooms 6 bucket
   checkWithSize size rooms
 
   aprefs <- plansPrefixNotSrc bdepth rooms
@@ -323,7 +322,7 @@ solveBF Driver{..} (prob, size) ename bdepth = do
         putStrLn $ "plans2: " ++ show plans2
         (results2, qc2) <- rexplore [pstring p | p <- plans2]
         zipWithM_ run plans2 (fromResultsI results2)
-        roomsF <- byRooms bucket
+        roomsF <- byRooms 6 bucket
         pure (roomsF, aprefs, qc2)
   (rooms2, asrcs, qc) <- if null aprefs
                      then pure (rooms, [], qc1)

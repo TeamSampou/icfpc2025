@@ -29,6 +29,8 @@ findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe
 findGraph' numRooms t@(Node startingRoomLabel _ _) = do
   -- Finite-domain sort は振る舞いが怪しいので代わりにIntを用いる
   let useIntSort = True
+  -- 各ラベルについて floor (numRooms / 4) 個の部屋はあると仮定
+  let assumeBalancedLabelDistribution = False
 
   sBool <- Z3.mkBoolSort
 
@@ -104,7 +106,13 @@ findGraph' numRooms t@(Node startingRoomLabel _ _) = do
          Z3.solverAssertCnstr =<< Z3.mkOr cs
 
   sLabel <- Z3.mkBvSort 2
-  let fixedLabels = startingRoomLabel : IntSet.toList (IntSet.delete startingRoomLabel (Trie.collectUnmodifiedLabels t))
+
+  let fixedLabels
+        | assumeBalancedLabelDistribution =
+            let m = numRooms `div` 4
+             in startingRoomLabel : concat [replicate (if label == startingRoomLabel then m - 1 else m) label | label <- [0..3]]
+        | otherwise =
+            startingRoomLabel : IntSet.toList (IntSet.delete startingRoomLabel (Trie.collectUnmodifiedLabels t))
   startingLabels <- forM [0..numRooms-1] $ \i -> do
     if i < length fixedLabels then
       Z3.mkInt (fixedLabels !! i) sLabel

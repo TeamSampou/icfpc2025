@@ -335,21 +335,23 @@ quintus   = ("quintus"   ,  30)
 
 -----
 
-type ResultI = [Int]
+doExplore :: Driver -> CandBucket -> [Plan'] -> IO ([[Int]], Int)
+doExplore Driver{..} bucket plans = do
+  r@(results, _qc) <- rexplore [pstring p | p <- plans]
+  zipWithM_ run plans (fromInts results)
+  pure r
+  where run plan = runExploreIO (\_ -> pure ()) bucket plan
+        fromInts rs = [map fromIntegral ri | ri <- rs]
 
 solveBF :: Driver -> Problem -> String -> Int -> IO (Layout, Int)
-solveBF Driver{..} (prob, size) ename bdepth = do
+solveBF drv@Driver{..} (prob, size) ename bdepth = do
   let plansBF = map P $ replicateM bdepth allDoors
-      fromResultsI rs = [map fromIntegral ri | ri <- rs]
 
   rinitClient
   _ <- rselect prob ename
   bucket <- newCandBucket
 
-  (results, qc1) <- rexplore [pstring p | p <- plansBF]
-
-  let run plan = runExploreIO (\_ -> pure ()) bucket plan
-  zipWithM_ run plansBF (fromResultsI results)
+  (_results1, qc1) <- doExplore drv bucket plansBF
   putStr . unlines =<< pprsCandBucket bucket
 
   rooms <- byRooms 6 bucket
@@ -359,13 +361,12 @@ solveBF Driver{..} (prob, size) ename bdepth = do
   let fillconn = do
         let plans2 = [pref <> P [d1, d2] | pref <- aprefs, d1 <- allDoors, d2 <- allDoors ]
         putStrLn $ "plans2: " ++ show plans2
-        (results2, qc2) <- rexplore [pstring p | p <- plans2]
-        zipWithM_ run plans2 (fromResultsI results2)
+        (_results2, qc2) <- doExplore drv bucket plans2
         roomsF <- byRooms 6 bucket
         pure (roomsF, aprefs, qc2)
   (rooms2, asrcs, qc) <- if null aprefs
-                     then pure (rooms, [], qc1)
-                     else fillconn
+                         then pure (rooms, [], qc1)
+                         else fillconn
 
   checkWithSize size rooms2
   let srcs = [P p | sz <- [0 .. bdepth - 2], p <- replicateM sz allDoors]

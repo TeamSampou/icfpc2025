@@ -181,6 +181,15 @@ findGraph' numRooms t@(Node startingRoomLabel _ _) = do
 
   f Seq.empty startingRoom startingLabels t
 
+  forM_ (Trie.deriveNontrivialDisequalities t) $ \(p1, p2) -> do
+    let g :: Z3.AST -> Char -> z3 Z3.AST
+        g e c = do
+          let d = read [c]
+          Z3.mkApp (doorFuncs !! d) [e]
+    e1 <- foldM g startingRoom p1
+    e2 <- foldM g startingRoom p2
+    Z3.solverAssertCnstr =<< Z3.mkNot =<< Z3.mkEq e1 e2
+
   ret <- Z3.solverCheck
 
   if ret /= Z3.Sat then do

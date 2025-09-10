@@ -343,17 +343,26 @@ findGraph2' numRooms t@(Node startingRoomLabel _ _) = do
 
     startingRoomVal <- mapM (fmap fromJust . Z3.evalBool m) startingRoom
     -- liftIO $ print startingRoomVal
+    assert (length [() | x <- startingRoomVal, x] == 1) $ pure ()
     let solStartingRoom = fromJust $ elemIndex True startingRoomVal
 
     startingLabelsVal <- mapM (fmap fromJust . Z3.evalBool m) startingLabels
     -- liftIO $ print $ Map.keys $ Map.filter id startingLabelsVal
+    forM_ rooms $ \room -> do
+       assert (Map.size (Map.filterWithKey (\(r, _) b -> r == room && b) startingLabelsVal) == 1) $ pure ()
     let solStartingLabels = [head [l | l <- labels, startingLabelsVal Map.! (r,l)] | r <- rooms]
 
-    _connectionsVal <- mapM (fmap fromJust . Z3.evalBool m) connections
+    connectionsVal <- mapM (fmap fromJust . Z3.evalBool m) connections
     -- liftIO $ print $ Map.keysSet $ Map.filter id connectionsVal
+    forM_ rooms $ \room -> do
+      forM_ doors $ \door -> do
+        assert (Map.size (Map.filterWithKey (\(r, d, _, _) b -> r==room && d==door && b) connectionsVal) == 1) $ pure ()
 
     connections2Val <- mapM (fmap fromJust . Z3.evalBool m) connections2
     -- liftIO $ print $ Map.keys $ Map.filter id connections2Val
+    forM_ rooms $ \room -> do
+      forM_ doors $ \door -> do
+        assert (Map.size (Map.filterWithKey (\(r, d, _) b -> r==room && d==door && b) connections2Val) == 1) $ pure ()
 
     let outEdges = IntMap.unionsWith IntMap.union [IntMap.singleton r1 (IntMap.singleton d r2) | ((r1,d,r2), b) <- Map.toList connections2Val, b]
         g = V.fromList $ zip solStartingLabels [outEdges IntMap.! r | r <- rooms]

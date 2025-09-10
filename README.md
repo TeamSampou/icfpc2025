@@ -4,6 +4,8 @@
 
 This is Team Sampou's repository for the [ICFP Programming Contest 2025](http://icfpcontest2025.github.io/).
 
+The source code at the end of the contest can be obtained using the [end-of-contest](https://github.com/TeamSampou/icfpc2025/tree/end-of-contest) tag.
+
 ![](banner.svg)
 
 ## Members

@@ -6,6 +6,7 @@ module Graph.Z3
 import Control.Exception
 import Control.Monad
 import Control.Monad.Trans
+import qualified Data.Foldable as F
 import qualified Data.IntMap.Strict as IntMap
 import qualified Data.IntSet as IntSet
 import Data.IORef
@@ -228,27 +229,23 @@ findGraph2' numRooms t@(Node startingRoomLabel _ _) = do
         Z3.solverAssertCnstr =<< Z3.mkAnd (z : zs)
 
   -- 出口側のドアまで考慮した接続関係 connections(r1,d1,r2,d2)
-  connections <- fmap Map.fromList $ sequence
+  -- 対称性を利用して変数を削減
+  connections <- fmap Map.unions $ sequence
       [ do v <- Z3.mkBoolVar =<< Z3.mkStringSymbol (printf "c_%d_%d_%d_%d" r1 d1 r2 d2)
-           pure ((r1,d1,r2,d2), v)
+           if (r1,d1) == (r2,d2) then
+             pure $ Map.singleton (r1,d1,r2,d2) v
+           else
+             pure $ Map.fromList [((r1,d1,r2,d2), v), ((r2,d2,r1,d1), v)]
       | r1 <- rooms
-      , d1 <- doors
       , r2 <- rooms
+      , r1 <= r2
+      , d1 <- doors
       , d2 <- doors
+      , (r1,d1) <= (r2,d2)
       ]
   assert (Map.size connections == numRooms * 6 * numRooms * 6) $ pure ()
 
-  -- 行ったら戻れる
-  -- TODO: 対称性を制約ではなく変数レベルで行う
-  sequence_
-    [ Z3.solverAssertCnstr =<< Z3.mkEq (connections Map.! (r1,d1,r2,d2)) (connections Map.! (r2,d2,r1,d1))
-    | r1 <- rooms
-    , r2 <- rooms
-    , d1 <- doors
-    , d2 <- doors
-    ]
-
-  -- 行き先は一意
+  -- 行き先の部屋とドアの組合せは一意
   forM_ rooms $ \r1 -> do
     forM_ doors $ \d1 -> do
       assertOneHot [connections Map.! (r1,d1,r2,d2) | r2 <- rooms, d2 <- doors]
@@ -264,6 +261,12 @@ findGraph2' numRooms t@(Node startingRoomLabel _ _) = do
     , r2 <- rooms
     ]
   assert (Map.size connections2 == numRooms * 6 * numRooms) $ pure ()
+
+  -- 行き先の部屋は一意
+  -- 冗長だが求解に有用な制約
+  forM_ rooms $ \r1 -> do
+    forM_ doors $ \d1 -> do
+      assertOneHot [connections2 Map.! (r1,d1,r2) | r2 <- rooms]
 
   -- 開始時点での部屋rのラベルがlであるという関係
   startingLabels <-
@@ -283,17 +286,21 @@ findGraph2' numRooms t@(Node startingRoomLabel _ _) = do
   let f :: Seq Action -> [Z3.AST] -> Map (RoomIndex, RoomLabel) Z3.AST -> ObservationSummary -> z3 ()
       f hist currentRoom currentLabels (Node label childrenD childrenL) = do
         -- 観測したラベルであるという制約
-        do cs <- forM rooms $ \r -> do
-             Z3.mkAnd [currentRoom !! r, currentLabels Map.! (r, label)]
-           Z3.solverAssertCnstr =<< Z3.mkOr cs
+        forM_ rooms $ \r -> do
+          Z3.solverAssertCnstr =<< Z3.mkImplies (currentRoom !! r) (currentLabels Map.! (r, label))
 
         forM_ (IntMap.toList childrenD) $ \(d, ch) -> do
+          let hist' = hist Seq.|> PassDoor d
+              movesStr = concat [show d | PassDoor d <- F.toList hist']
           -- 更新後の位置
           newRoom <- forM rooms $ \r2 -> do
-            cs <- forM rooms $ \r1 -> do
-              Z3.mkAnd [currentRoom !! r1, connections2 Map.! (r1,d,r2)]
-            Z3.mkOr cs
-          f (hist Seq.|> PassDoor d) newRoom currentLabels ch
+            v <- Z3.mkBoolVar =<< Z3.mkStringSymbol (printf "room_%s_%d" movesStr r2)
+            forM_ rooms $ \r1 -> do
+              conj <- Z3.mkAnd [currentRoom !! r1, connections2 Map.! (r1,d,r2)]
+              Z3.solverAssertCnstr =<< Z3.mkImplies conj v
+            pure v
+          assertOneHot newRoom
+          f hist' newRoom currentLabels ch
 
         forM_ (IntMap.toList childrenL) $ \(l, ch) -> do
           -- 更新後のラベル

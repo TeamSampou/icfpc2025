@@ -70,7 +70,7 @@ findGraph' numRooms t@(Node startingRoomLabel _ _) = do
         func <- Z3.mkFuncDecl sym [sRoom] sBool
         pure ((i,j), func)
 
-    -- 各r,iについて e[i,j] を満たす j はただ一つ
+    -- 各r,iについて e[i,j](r) を満たす j はただ一つ
     forM_ rooms $ \r -> do
       forM_ [0..5] $ \i -> do
         cs <- forM [0..5] $ \j -> Z3.mkApp (e Map.! (i,j)) [r]

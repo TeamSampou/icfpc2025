@@ -13,7 +13,8 @@ import System.IO (withFile, IOMode (ReadMode), hGetLine)
 
 import qualified Data.Aeson as J
 
-import TypesJSON (ExploreResponse (..))
+import Base
+import TypesJSON (ExploreResponse (..), GuessRequestMap (..), Connection (..), RoomDoor (..))
 
 timestamp :: IO String
 timestamp =
@@ -128,3 +129,13 @@ getExploreReplay = do
             | ps /= plans  -> fail $ "inconsistent: " ++ show ps ++ " =/= " ++ show plans
             | otherwise    -> getResults nplanss
   pure (eselect, eexplore)
+
+-----
+
+readLayoutFromGuessFile :: FilePath -> IO Layout
+readLayoutFromGuessFile fname = do
+  bs <- LB.readFile fname
+  case J.eitherDecode bs of
+    Left err -> fail err
+    Right (GuessRequestMap roomLabels startingRooms connects) ->
+      pure $ (roomLabels, startingRooms, [ ((a,b),(c,d)) | (Connection (RoomDoor a b) (RoomDoor c d)) <- connects ] )

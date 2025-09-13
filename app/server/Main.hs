@@ -119,7 +119,6 @@ main = do
   let problems = Map.fromList
         [ ("secundus", ("solutions/secundus/07-2041.guess", False))
         , ("tertius",  ("solutions/tertius/07-205249.guess", False))
-        , ("tertius",  ("solutions/tertius/07-205249.guess", False))
         , ("aleph",    ("solutions/aleph/08-105823.guess", True))
         , ("beth",     ("solutions/beth/08-162028.guess", True))
         , ("gimel",    ("solutions/gimel/08-191010.guess", True))

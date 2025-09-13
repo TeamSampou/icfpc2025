@@ -49,6 +49,12 @@ Prepare `.env` file with the following content:
 ID="..."
 ```
 
+If you want to connect to a server other then https://31pwr5t6ij.execute-api.eu-west-2.amazonaws.com/, you can specify the server using `ENDPOINT_URL` environment variable in `.env` file.
+
+```
+ENDPOINT_URL=http://localhost:8080/
+```
+
 ### Manual solving
 
 Run `stack repl`.
@@ -128,3 +134,9 @@ $ stack run oga-solve1 zain 100
 ### Systematic exploration 2
 
 (TBD)
+
+### Running a simple server program
+
+```
+$ stack run -- server -p 8080
+```

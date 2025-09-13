@@ -134,3 +134,9 @@ $ stack run oga-solve1 zain 100
 ### Systematic exploration 2
 
 (TBD)
+
+### Running a simple server program
+
+```
+$ stack run -- server -p 8080
+```

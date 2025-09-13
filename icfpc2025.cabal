@@ -164,6 +164,39 @@ executable oga-solve1
     , time
   default-language: GHC2024
 
+executable server
+  main-is: Main.hs
+  other-modules:
+      Paths_icfpc2025
+  hs-source-dirs:
+      app/server
+  default-extensions:
+      ImplicitParams
+      ImportQualifiedPost
+      LambdaCase
+      MultiWayIf
+      NPlusKPatterns
+  ghc-options: -Wall -Wno-unticked-promoted-constructors -Wno-unused-imports -Wno-unused-top-binds -Wno-orphans -rtsopts
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , exceptions
+    , filepath
+    , icfpc2025
+    , mtl
+    , optparse-applicative
+    , process
+    , servant
+    , servant-server
+    , stm
+    , text
+    , time
+    , warp
+  default-language: GHC2024
+
 test-suite icfpc2025-doctest
   type: exitcode-stdio-1.0
   main-is: doctests.hs

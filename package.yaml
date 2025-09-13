@@ -111,6 +111,18 @@ executables:
     - icfpc2025
     - mwc-random
 
+  server:
+    main:                 Main.hs
+    source-dirs:          app/server
+    ghc-options:
+    - -rtsopts
+    dependencies:
+    - icfpc2025
+    - optparse-applicative
+    - servant
+    - servant-server
+    - warp
+
 tests:
   icfpc2025-test:
     main:                spec.hs

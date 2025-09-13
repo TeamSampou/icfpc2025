@@ -26,6 +26,19 @@ customOptions prefix =
 
 -- ------------------------------------------------------------------------
 
+data SelectRequest
+  = SelectRequest
+  { selectRequestId :: String
+  , selectRequestProblemName :: String
+  }
+  deriving (Generic)
+
+instance J.ToJSON SelectRequest where
+  toEncoding = J.genericToEncoding (customOptions "selectRequest")
+
+instance J.FromJSON SelectRequest where
+  parseJSON = J.genericParseJSON (customOptions "selectRequest")
+
 data SelectResponse
   = SelectResponse
   { selectResponseProblemName :: String

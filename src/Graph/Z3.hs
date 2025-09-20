@@ -1,6 +1,9 @@
 module Graph.Z3
   ( findGraph
   , findGraph2
+
+  , findLayout
+  , findLayout2
   ) where
 
 import Control.Exception
@@ -22,7 +25,7 @@ import Text.Printf
 import qualified Z3.Monad as Z3
 
 import Base
-import Graph (DiGraph)
+import Graph (DiGraph, fromLayout)
 import ObservationSummary (ObservationSummary, Trie (..))
 import qualified ObservationSummary as Trie
 
@@ -31,7 +34,13 @@ findGraph :: Int -> ObservationSummary -> IO (Maybe (DiGraph, RoomIndex))
 findGraph numRooms t = Z3.evalZ3 $ findGraph' numRooms t
 
 findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe (DiGraph, RoomIndex))
-findGraph' numRooms t@(Node startingRoomLabel _ _) = do
+findGraph' numRooms t = fmap (fmap fromLayout) $ findLayout' numRooms t
+
+findLayout :: Int -> ObservationSummary -> IO (Maybe Layout)
+findLayout numRooms t = Z3.evalZ3 $ findLayout' numRooms t
+
+findLayout' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe Layout)
+findLayout' numRooms t@(Node startingRoomLabel _ _) = do
   -- Finite-domain sort は振る舞いが怪しいので代わりにIntを用いる
   let useIntSort = True
   -- 各ラベルについて floor (numRooms / 4) 個の部屋はあると仮定
@@ -60,55 +69,40 @@ findGraph' numRooms t@(Node startingRoomLabel _ _) = do
         Z3.solverAssertCnstr =<< Z3.mkLe r2 ub
     return func
 
-  if True then do
-    -- 対称性を厳密に保証する
+  -- e[i,j](r) は部屋 r からドア i を通った際の出口側のドアは j であるということを表す論理変数
+  -- すなわち i で行ったら j で返ってこれる。
+  e <- fmap (Map.fromList . concat) $ forM [0..5] $ \i -> do
+    forM [0..5] $ \j -> do
+      sym <- Z3.mkStringSymbol ("e" ++ show i ++ show j)
+      func <- Z3.mkFuncDecl sym [sRoom] sBool
+      pure ((i,j), func)
 
-    -- e[i,j](r) は部屋 r からドア i を通った際の出口側のドアは j であるということを表す論理変数
-    -- すなわち i で行ったら j で返ってこれる。
-    e <- fmap (Map.fromList . concat) $ forM [0..5] $ \i -> do
-      forM [0..5] $ \j -> do
-        sym <- Z3.mkStringSymbol ("e" ++ show i ++ show j)
-        func <- Z3.mkFuncDecl sym [sRoom] sBool
-        pure ((i,j), func)
+  -- 各r,iについて e[i,j](r) を満たす j はただ一つ
+  forM_ rooms $ \r -> do
+    forM_ [0..5] $ \i -> do
+      cs <- forM [0..5] $ \j -> Z3.mkApp (e Map.! (i,j)) [r]
+      Z3.solverAssertCnstr =<< Z3.mkOr cs
+      forM_ (pairs cs) $ \(c1,c2) -> do
+        tmp <- Z3.mkAnd [c1,c2]
+        Z3.solverAssertCnstr =<< Z3.mkNot tmp
 
-    -- 各r,iについて e[i,j](r) を満たす j はただ一つ
-    forM_ rooms $ \r -> do
-      forM_ [0..5] $ \i -> do
-        cs <- forM [0..5] $ \j -> Z3.mkApp (e Map.! (i,j)) [r]
-        Z3.solverAssertCnstr =<< Z3.mkOr cs
-        forM_ (pairs cs) $ \(c1,c2) -> do
-          tmp <- Z3.mkAnd [c1,c2]
-          Z3.solverAssertCnstr =<< Z3.mkNot tmp
-
-    -- e[i,j](r) → d[j](d[i](r))=r ∧ e[j,i](d[i](r))
-    -- ちゃんと戻ってこれて、ドア同士が対応している
-    forM_ rooms $ \r -> do
-      forM_ [0..5] $ \i -> do
-        forM_ [0..5] $ \j -> do
-          premise <- Z3.mkApp (e Map.! (i,j)) [r]
-          -- i で行った先の部屋
-          r2 <- Z3.mkApp (doorFuncs !! i) [r]
-          -- i で行ったら j で戻ってこれる。すなわち d[j](r2)=r
-          conclusion1 <- do
-            r3 <- Z3.mkApp (doorFuncs !! j) [r2]
-            Z3.mkEq r r3
-          -- 戻ってくる際のドアの対応はj,i。すなわち e[j,i](r2)
-          conclusion2 <- Z3.mkApp (e Map.! (j,i)) [r2]
-          -- 最終的な条件
-          conclusion <- Z3.mkAnd [conclusion1, conclusion2]
-          Z3.solverAssertCnstr =<< Z3.mkImplies premise conclusion
-
-  else do
-    -- 部屋の間のエッジは逆向きのエッジが存在しないといけない。
-    -- 本当は本数まであっていないといけないが、ここでは存在だけを制約にする。
-    forM_ rooms $ \room -> do
-      forM_ doorFuncs $ \df -> do
-         -- d_1(d_i(room))=room ∨ … ∨ d_n(d_i(room))=room
-         room2 <- Z3.mkApp df [room]
-         cs <- forM doorFuncs $ \df2 -> do
-           room3 <- Z3.mkApp df2 [room2]
-           Z3.mkEq room room3
-         Z3.solverAssertCnstr =<< Z3.mkOr cs
+  -- e[i,j](r) → d[j](d[i](r))=r ∧ e[j,i](d[i](r))
+  -- ちゃんと戻ってこれて、ドア同士が対応している
+  forM_ rooms $ \r -> do
+    forM_ [0..5] $ \i -> do
+      forM_ [0..5] $ \j -> do
+        premise <- Z3.mkApp (e Map.! (i,j)) [r]
+        -- i で行った先の部屋
+        r2 <- Z3.mkApp (doorFuncs !! i) [r]
+        -- i で行ったら j で戻ってこれる。すなわち d[j](r2)=r
+        conclusion1 <- do
+          r3 <- Z3.mkApp (doorFuncs !! j) [r2]
+          Z3.mkEq r r3
+        -- 戻ってくる際のドアの対応はj,i。すなわち e[j,i](r2)
+        conclusion2 <- Z3.mkApp (e Map.! (j,i)) [r2]
+        -- 最終的な条件
+        conclusion <- Z3.mkAnd [conclusion1, conclusion2]
+        Z3.solverAssertCnstr =<< Z3.mkImplies premise conclusion
 
   sLabel <- Z3.mkBvSort 2
 
@@ -199,26 +193,38 @@ findGraph' numRooms t@(Node startingRoomLabel _ _) = do
     -- str <- Z3.modelToString m
     -- liftIO $ putStrLn str
 
-    g <- fmap V.fromList $ forM [0..numRooms-1] $ \r -> do
+    labels <- forM [0..numRooms-1] $ \r -> do
+      fmap (fromIntegral . fromJust) $ Z3.evalInt m (startingLabels !! r)
+
+    connections <- fmap concat $ forM [0..numRooms-1] $ \r -> do
       let room = rooms !! r
 
-      label <- fmap (fromIntegral . fromJust) $ Z3.evalInt m (startingLabels !! r)
+      destDoors <- fmap IntMap.unions $ sequence
+        [ do b <- fmap fromJust $ Z3.evalBool m =<< Z3.mkApp p [room]
+             pure $ if b then IntMap.singleton i j else IntMap.empty
+        | ((i,j), p) <- Map.toList e
+        ]
 
-      outEdges <- fmap IntMap.fromList $ forM (zip [0..] doorFuncs) $ \(door, df) -> do
-        destExpr <- Z3.mkApp df [room]
-        dest <- fmap (fromIntegral . fromJust) $ Z3.evalInt m destExpr
-        pure (door, dest)
+      forM (zip [0..] doorFuncs) $ \(door, df) -> do
+        destRoomExpr <- Z3.mkApp df [room]
+        destRoom <- fmap (fromIntegral . fromJust) $ Z3.evalInt m destRoomExpr
+        let destDoor = destDoors IntMap.! door
+        pure ((r, door), (destRoom, destDoor))
 
-      pure (label, outEdges)
-
-    return (Just (g, 0))
+    pure $ Just (labels, 0, connections)
 
 
 findGraph2 :: Int -> ObservationSummary -> IO (Maybe (DiGraph, RoomIndex))
 findGraph2 numRooms t = Z3.evalZ3 $ findGraph2' numRooms t
 
 findGraph2' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe (DiGraph, RoomIndex))
-findGraph2' numRooms t@(Node startingRoomLabel _ _) = do
+findGraph2' numRooms t = fmap (fmap fromLayout) $ findLayout' numRooms t
+
+findLayout2 :: Int -> ObservationSummary -> IO (Maybe Layout)
+findLayout2 numRooms t = Z3.evalZ3 $ findLayout' numRooms t
+
+findLayout2' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe Layout)
+findLayout2' numRooms t@(Node startingRoomLabel _ _) = do
   -- 各ラベルについて floor (numRooms / 4) 個の部屋はあると仮定
   let assumeBalancedLabelDistribution = False
 
@@ -380,9 +386,7 @@ findGraph2' numRooms t@(Node startingRoomLabel _ _) = do
       forM_ doors $ \door -> do
         assert (Map.size (Map.filterWithKey (\(r, d, _) b -> r==room && d==door && b) connections2Val) == 1) $ pure ()
 
-    let outEdges = IntMap.unionsWith IntMap.union [IntMap.singleton r1 (IntMap.singleton d r2) | ((r1,d,r2), b) <- Map.toList connections2Val, b]
-        g = V.fromList $ zip solStartingLabels [outEdges IntMap.! r | r <- rooms]
-    return (Just (g, solStartingRoom))
+    pure $ Just (solStartingLabels, solStartingRoom, [((r1,d1), (r2,d2)) | ((r1,d1,r2,d2),b) <- Map.toList connectionsVal, b])
 
 
 pairs :: [a] -> [(a,a)]
@@ -391,21 +395,21 @@ pairs (x:xs) = [(x,y) | y <- xs] ++ pairs xs
 
 
 -- test case for "probatio"
-_test1 = findGraph 3 t
+_test1 = findLayout 3 t
   where
     t = Trie.fromObservations $ zip plans results
     plans = ["000","123","213","333"] ++ ["4","5","02","03","04","05","31","32","34","35"]
     results = [[0,1,2,0],[0,0,1,2],[0,1,1,2],[0,2,0,2]] ++ [[0,2],[0,2],[0,1,0],[0,1,2],[0,1,1],[0,1,0],[0,2,1],[0,2,0],[0,2,2],[0,2,1]]
 
 -- test case for "primus"
-_test2 = findGraph 6 t
+_test2 = findLayout 6 t
   where
     t = Trie.fromObservation plan result
     plan = "021320403505044123550520034431312210134541025332505010033554343013423011254052531011533004340304253205132534"
     result = [0,0,3,0,0,3,3,3,3,2,3,3,1,2,3,3,0,3,2,3,1,2,3,2,0,0,0,2,3,2,0,0,0,0,0,0,0,0,0,2,3,3,0,1,1,1,0,0,3,1,2,3,3,0,1,1,1,0,0,0,2,1,1,1,1,1,0,2,1,1,1,1,2,1,1,1,2,3,2,3,2,0,1,2,0,0,0,0,1,1,3,2,3,3,2,0,2,1,1,0,3,3,1,1,0,3,1,1,1]
 
 -- test case for "secundus"
-_test3 = findGraph 12 t
+_test3 = findLayout 12 t
   where
     t = Trie.fromObservations $ zip plans results
     plans =
@@ -420,7 +424,7 @@ _test3 = findGraph 12 t
       ]
 
 -- test case for "tertius"
-_test4 = findGraph 18 t
+_test4 = findLayout 18 t
   where
     t = Trie.fromObservations $ zip plans results
     plans =
@@ -434,7 +438,7 @@ _test4 = findGraph 18 t
       , [0,2,3,1,3,1,0,1,0,1,3,2,1,1,0,2,2,3,2,3,1,2,2,2,3,0,3,2,3,2,3,2,3,2,0,1,0,2,2,0,1,0,1,0,1,0,0,1,0,1,3,2,0,1,3,1,0,2,2,0,1,2,0,1,2,2,1,2,2,0,1,2,0,2,1,0,1,0,1,0,1,0,1,0,2,3,2,3,3,3,3,3,3,1,3,3,3,2,3,2,0,2,3,1,0,1,0,2,2,0,1,3,1,3,1,0,3,1,3,3,3,2,3,3,3,3,3,2,2,1,3,2,3,1,1,1,3,1,0,1,0,3,1,3,1,0,3,2,3,1,0,0,1,0,2,2,0,1,0,0,0,0,0,1,0,2,2,2,1,0,2,0,2,3,2,3,2,0,1,0,0,0,3,1,0,1,0,1,1,1,0,1,0,1,0,1,0,0,0,1,0,0,0,1,2,3,0,0,1,2,3,2,2,2,2,1,1,0,1,3,1,3,1,3,1,3,2,3,3,3,3,2,0,2,0,0,2,3,1,3,1,0,2,0,2,3,3,3,1,3,2,3,1,0,1,3,2,1,2,0,1,0,2,3,1,0,0,0,0,2,2,1,1,0,0,1,1,0,3,0,2,3,2,0,2,1,1,3,2,0,0,0,2,0,2,0,2,2,0,2,0,2,2,3,2,2,0,2,0,2,0,1,0,1,3,3,2,1,2,0,1,0,3,1,0]
       ]
 
-_test_aleph = findGraph 12 t
+_test_aleph = findLayout 12 t
   where
     t = Trie.fromObservations $ zip plans results
     plans =
@@ -446,7 +450,7 @@ _test_aleph = findGraph 12 t
       , [0,0,3,1,0,2,2,3,1,0,2,1,0,2,0,3,0,0,3,1,3,2,1,3,0,0,1,1,2,2,1,3,3,0,2,1,0,2,3,3,2,0,1,1,0,2,2,3,3,0,3,1,0,2,1,3,2,0,1,1,3,2,2,3,2,0,0,1,0,2,0,3,1,0,1,1,1,2,0,3,1,0,1,1,2,2,1,3,3,0,0,1,0,2,0,3,3,0,3,1,1,2,0,3,2,0,2,1,1,2,3,3,0,0,2,1,0,2,3,3,1,0,0,1,3,2,2,3,2,0,3,1,1,2,1,3,3,0,2,1,0,2,1,3,2]
       ]
 
-_test_aleph_2 = findGraph 12 t
+_test_aleph_2 = findLayout 12 t
   where
     t = Trie.fromObservations $ zip plans results
     plans =
@@ -466,7 +470,7 @@ _test_aleph_2 = findGraph 12 t
       , [0,2,0,1,1,0,2,1,3,3,0,0,1,3,2,2,3,0,0,3,1,2,2,1,3,1,0,0,1,1,2,1,3,0,0,2,1,0,2,1,3,2,0,0,1,2,2,3,3,1,0,1,1,2,2,0,3,3,0,0,1,0,2,3,3,3,0,2,1,0,2,1,3,2,0,1,1,0,2,0,3,1,0,1,1,0,2,2,3,2,0,2,1,0,2,1,3,3,0,3,1,3,2,1,3,3,0,2,1,0,2,3,3,0,0,3,1,1,2,2,3,3,0,0,1,1,2,1,3,1,0,3,1,2,2,2,3,2,0,3,1,3,2,1,3]
       ]
 
-_test_beth = findGraph2 24 t
+_test_beth = findLayout2 24 t
   where
     t = Trie.fromObservations $ zip plans results
     plans =
@@ -486,7 +490,7 @@ _test_beth = findGraph2 24 t
       , [0,2,2,0,3,3,0,0,1,0,3,3,2,1,1,3,2,1,1,2,2,1,2,2,2,2,3,2,1,2,0,3,2,3,2,2,2,2,3,3,2,3,1,2,1,3,3,0,2,3,3,1,1,1,1,1,0,3,1,0,1,0,1,2,1,1,3,1,1,3,1,1,2,1,2,1,0,0,3,3,0,1,1,0,3,2,1,2,3,1,3,3,1,1,1,2,3,1,3,3,1,0,2,1,3,2,2,3,1,2,2,2,1,1,2,0,0,2,2,1,3,2,3,0,2,3,3,2,1,1,3,3,3,3,0,1,3,0,3,1,0,3,2,0,3,3,2,2,1,1,3,2,2,3,1,2,3,1,1,2,1,1,2,1,3,3,0,3,0,0,2,1,2,0,1,3,0,3,0,0,1,2,1,1,0,3,3,3,1,3,1,0,0,2,0,0,3,1,1,1,0,1,1,0,2,1,1,1,2,1,1,2,0,1,1,1,2,3,0,1,3,2,1,2,2,1,3,0,3,1,3,2,0,3,1,0,3,3,1,2,3,2,2,1,3,2,3,1,2,3,1,3,3,1,3,2,1,1,1,3,1,1,3,1,1,3,3,3,1,0,1,2,0,2,1,3,0,3,1,3,0,1,0,0,1,1,3,3,1]
       ]
 
-_test_vau = findGraph2 18 t
+_test_vau = findLayout2 18 t
   where
     t = Trie.fromObservations $ zip plans results
     plans =

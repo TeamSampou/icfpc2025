@@ -34,10 +34,20 @@ findGraph :: Int -> ObservationSummary -> IO (Maybe (DiGraph, RoomIndex))
 findGraph numRooms t = fmap (fmap fromLayout) $ findLayout numRooms t
 
 findLayout :: Int -> ObservationSummary -> IO (Maybe Layout)
-findLayout numRooms t = Z3.evalZ3 $ findLayout' numRooms t
+findLayout numRooms t = Z3.evalZ3 $ do
+  getLayout <- assertSMTModel numRooms t
 
-findLayout' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe Layout)
-findLayout' numRooms t@(Node startingRoomLabel _ _) = do
+  ret <- Z3.solverCheck
+  if ret /= Z3.Sat then do
+    pure Nothing
+  else do
+    m <- Z3.solverGetModel
+    -- str <- Z3.modelToString m
+    -- liftIO $ putStrLn str
+    fmap Just $ getLayout m
+
+assertSMTModel :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Z3.Model -> z3 Layout)
+assertSMTModel numRooms t@(Node startingRoomLabel _ _) = do
   -- Finite-domain sort は振る舞いが怪しいので代わりにIntを用いる
   let useIntSort = True
   -- 各ラベルについて floor (numRooms / 4) 個の部屋はあると仮定
@@ -181,44 +191,49 @@ findLayout' numRooms t@(Node startingRoomLabel _ _) = do
     e2 <- foldM g startingRoom p2
     Z3.solverAssertCnstr =<< Z3.mkNot =<< Z3.mkEq e1 e2
 
-  ret <- Z3.solverCheck
+  let getLayout :: Z3.Model -> z3 Layout
+      getLayout m = do
+        labels <- forM [0..numRooms-1] $ \r -> do
+          fmap (fromIntegral . fromJust) $ Z3.evalInt m (startingLabels !! r)
 
-  if ret /= Z3.Sat then do
-    pure Nothing
-  else do
-    m <- Z3.solverGetModel
-    -- str <- Z3.modelToString m
-    -- liftIO $ putStrLn str
+        connections <- fmap concat $ forM [0..numRooms-1] $ \r -> do
+          let room = rooms !! r
 
-    labels <- forM [0..numRooms-1] $ \r -> do
-      fmap (fromIntegral . fromJust) $ Z3.evalInt m (startingLabels !! r)
+          destDoors <- fmap IntMap.unions $ sequence
+            [ do b <- fmap fromJust $ Z3.evalBool m =<< Z3.mkApp p [room]
+                 pure $ if b then IntMap.singleton i j else IntMap.empty
+            | ((i,j), p) <- Map.toList e
+            ]
 
-    connections <- fmap concat $ forM [0..numRooms-1] $ \r -> do
-      let room = rooms !! r
+          forM (zip [0..] doorFuncs) $ \(door, df) -> do
+            destRoomExpr <- Z3.mkApp df [room]
+            destRoom <- fmap (fromIntegral . fromJust) $ Z3.evalInt m destRoomExpr
+            let destDoor = destDoors IntMap.! door
+            pure ((r, door), (destRoom, destDoor))
 
-      destDoors <- fmap IntMap.unions $ sequence
-        [ do b <- fmap fromJust $ Z3.evalBool m =<< Z3.mkApp p [room]
-             pure $ if b then IntMap.singleton i j else IntMap.empty
-        | ((i,j), p) <- Map.toList e
-        ]
+        pure (labels, 0, connections)
 
-      forM (zip [0..] doorFuncs) $ \(door, df) -> do
-        destRoomExpr <- Z3.mkApp df [room]
-        destRoom <- fmap (fromIntegral . fromJust) $ Z3.evalInt m destRoomExpr
-        let destDoor = destDoors IntMap.! door
-        pure ((r, door), (destRoom, destDoor))
-
-    pure $ Just (labels, 0, connections)
+  pure getLayout
 
 
 findGraph2 :: Int -> ObservationSummary -> IO (Maybe (DiGraph, RoomIndex))
 findGraph2 numRooms t = fmap (fmap fromLayout) $ findLayout2 numRooms t
 
 findLayout2 :: Int -> ObservationSummary -> IO (Maybe Layout)
-findLayout2 numRooms t = Z3.evalZ3 $ findLayout' numRooms t
+findLayout2 numRooms t = Z3.evalZ3 $ do
+  getLayout <- assertSATModel numRooms t
 
-findLayout2' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe Layout)
-findLayout2' numRooms t@(Node startingRoomLabel _ _) = do
+  ret <- Z3.solverCheck
+  if ret /= Z3.Sat then do
+    pure Nothing
+  else do
+    m <- Z3.solverGetModel
+    -- str <- Z3.modelToString m
+    -- liftIO $ putStrLn str
+    fmap Just $ getLayout m
+
+assertSATModel :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Z3.Model -> z3 Layout)
+assertSATModel numRooms t@(Node startingRoomLabel _ _) = do
   -- 各ラベルについて floor (numRooms / 4) 個の部屋はあると仮定
   let assumeBalancedLabelDistribution = False
 
@@ -348,39 +363,34 @@ findLayout2' numRooms t@(Node startingRoomLabel _ _) = do
 
   -- </symmetry breaking>
 
-  ret <- Z3.solverCheck
+  let getLayout :: Z3.Model -> z3 Layout
+      getLayout m = do
+        startingRoomVal <- mapM (fmap fromJust . Z3.evalBool m) startingRoom
+        -- liftIO $ print startingRoomVal
+        assert (length [() | x <- startingRoomVal, x] == 1) $ pure ()
+        let solStartingRoom = fromJust $ elemIndex True startingRoomVal
 
-  if ret /= Z3.Sat then do
-    pure Nothing
-  else do
-    m <- Z3.solverGetModel
-    -- str <- Z3.modelToString m
-    -- liftIO $ putStrLn str
+        startingLabelsVal <- mapM (fmap fromJust . Z3.evalBool m) startingLabels
+        -- liftIO $ print $ Map.keys $ Map.filter id startingLabelsVal
+        forM_ rooms $ \room -> do
+           assert (Map.size (Map.filterWithKey (\(r, _) b -> r == room && b) startingLabelsVal) == 1) $ pure ()
+        let solStartingLabels = [head [l | l <- labels, startingLabelsVal Map.! (r,l)] | r <- rooms]
 
-    startingRoomVal <- mapM (fmap fromJust . Z3.evalBool m) startingRoom
-    -- liftIO $ print startingRoomVal
-    assert (length [() | x <- startingRoomVal, x] == 1) $ pure ()
-    let solStartingRoom = fromJust $ elemIndex True startingRoomVal
+        connectionsVal <- mapM (fmap fromJust . Z3.evalBool m) connections
+        -- liftIO $ print $ Map.keysSet $ Map.filter id connectionsVal
+        forM_ rooms $ \room -> do
+          forM_ doors $ \door -> do
+            assert (Map.size (Map.filterWithKey (\(r, d, _, _) b -> r==room && d==door && b) connectionsVal) == 1) $ pure ()
 
-    startingLabelsVal <- mapM (fmap fromJust . Z3.evalBool m) startingLabels
-    -- liftIO $ print $ Map.keys $ Map.filter id startingLabelsVal
-    forM_ rooms $ \room -> do
-       assert (Map.size (Map.filterWithKey (\(r, _) b -> r == room && b) startingLabelsVal) == 1) $ pure ()
-    let solStartingLabels = [head [l | l <- labels, startingLabelsVal Map.! (r,l)] | r <- rooms]
+        connections2Val <- mapM (fmap fromJust . Z3.evalBool m) connections2
+        -- liftIO $ print $ Map.keys $ Map.filter id connections2Val
+        forM_ rooms $ \room -> do
+          forM_ doors $ \door -> do
+            assert (Map.size (Map.filterWithKey (\(r, d, _) b -> r==room && d==door && b) connections2Val) == 1) $ pure ()
 
-    connectionsVal <- mapM (fmap fromJust . Z3.evalBool m) connections
-    -- liftIO $ print $ Map.keysSet $ Map.filter id connectionsVal
-    forM_ rooms $ \room -> do
-      forM_ doors $ \door -> do
-        assert (Map.size (Map.filterWithKey (\(r, d, _, _) b -> r==room && d==door && b) connectionsVal) == 1) $ pure ()
+        pure (solStartingLabels, solStartingRoom, [((r1,d1), (r2,d2)) | ((r1,d1,r2,d2),b) <- Map.toList connectionsVal, b])
 
-    connections2Val <- mapM (fmap fromJust . Z3.evalBool m) connections2
-    -- liftIO $ print $ Map.keys $ Map.filter id connections2Val
-    forM_ rooms $ \room -> do
-      forM_ doors $ \door -> do
-        assert (Map.size (Map.filterWithKey (\(r, d, _) b -> r==room && d==door && b) connections2Val) == 1) $ pure ()
-
-    pure $ Just (solStartingLabels, solStartingRoom, [((r1,d1), (r2,d2)) | ((r1,d1,r2,d2),b) <- Map.toList connectionsVal, b])
+  pure getLayout
 
 
 pairs :: [a] -> [(a,a)]

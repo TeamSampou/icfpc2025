@@ -34,6 +34,7 @@ library
       ClientWrapper
       FilesIO
       Graph
+      Graph.ShortestPath
       Graph.Z3
       LabelledBucket
       LayoutHexSVG
@@ -63,6 +64,8 @@ library
     , exceptions
     , filepath
     , graphviz
+    , hashtables
+    , heaps
     , http-conduit
     , mtl
     , mwc-random
@@ -72,6 +75,8 @@ library
     , stm
     , text
     , time
+    , transformers
+    , unordered-containers
     , vector
     , z3
   default-language: GHC2024

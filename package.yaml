@@ -67,10 +67,14 @@ library:
   - aeson
   - dotenv
   - graphviz
+  - hashtables
+  - heaps
   - http-conduit
   - mwc-random
   - primitive
   - split
+  - transformers
+  - unordered-containers
   - vector
   - z3
   ## - constraints

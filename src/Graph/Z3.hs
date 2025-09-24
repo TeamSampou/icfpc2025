@@ -31,10 +31,7 @@ import qualified ObservationSummary as Trie
 
 
 findGraph :: Int -> ObservationSummary -> IO (Maybe (DiGraph, RoomIndex))
-findGraph numRooms t = Z3.evalZ3 $ findGraph' numRooms t
-
-findGraph' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe (DiGraph, RoomIndex))
-findGraph' numRooms t = fmap (fmap fromLayout) $ findLayout' numRooms t
+findGraph numRooms t = fmap (fmap fromLayout) $ findLayout numRooms t
 
 findLayout :: Int -> ObservationSummary -> IO (Maybe Layout)
 findLayout numRooms t = Z3.evalZ3 $ findLayout' numRooms t
@@ -215,10 +212,7 @@ findLayout' numRooms t@(Node startingRoomLabel _ _) = do
 
 
 findGraph2 :: Int -> ObservationSummary -> IO (Maybe (DiGraph, RoomIndex))
-findGraph2 numRooms t = Z3.evalZ3 $ findGraph2' numRooms t
-
-findGraph2' :: forall z3. Z3.MonadZ3 z3 => Int -> ObservationSummary -> z3 (Maybe (DiGraph, RoomIndex))
-findGraph2' numRooms t = fmap (fmap fromLayout) $ findLayout' numRooms t
+findGraph2 numRooms t = fmap (fmap fromLayout) $ findLayout2 numRooms t
 
 findLayout2 :: Int -> ObservationSummary -> IO (Maybe Layout)
 findLayout2 numRooms t = Z3.evalZ3 $ findLayout' numRooms t
